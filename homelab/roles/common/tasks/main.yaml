@@ -1,0 +1,19 @@
+- ansible.builtin.include_tasks:
+    file: essentials.yaml
+
+- ansible.builtin.include_tasks:
+    file: git.clone.yaml
+
+- name: Ensure kubeconfig var is in file .zshrc
+  ansible.builtin.lineinfile:
+      path: "{{ ansible_user_dir }}/.zshrc"
+      line: "export KUBECONFIG=~/.kube/k8s-prod:~/.kube/config:~/.kube/k8s-lab"
+      state: present
+      create: true
+
+- name: Ensure kubeconfig var is in file .profile
+  ansible.builtin.lineinfile:
+      path: "{{ ansible_user_dir }}/.profile"
+      line: "export KUBECONFIG=~/.kube/k8s-prod:~/.kube/config:~/.kube/k8s-lab"
+      state: present
+      create: true

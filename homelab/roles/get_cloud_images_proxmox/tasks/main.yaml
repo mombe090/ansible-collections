@@ -1,0 +1,7 @@
+- name: Download Cloud Image if not exists
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "/var/lib/vz/template/iso/{{ item.name }}.img"
+    mode: "0644"
+  loop: "{{ distributions }}"
+

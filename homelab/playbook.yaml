@@ -1,0 +1,7 @@
+---
+- name: Download Distribution Images
+  hosts: proxmox
+  gather_facts: yes
+  become: yes
+  roles:
+    - name: get_cloud_images_proxmox
