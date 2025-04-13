@@ -10,7 +10,9 @@
   become: yes
   args:
     chdir: "~/ansible-collections/homelab/roles/pihole/files"
-    cmd: docker compose up -d --force-recreate
+    cmd: |
+      docker compose down
+      docker compose up -d
 
 - name: Docker compose ps
   ansible.builtin.shell:
