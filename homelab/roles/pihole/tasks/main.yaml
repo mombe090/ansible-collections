@@ -5,25 +5,18 @@
     systemctl reload-or-restart systemd-resolved
   become: yes
 
-- name: Copy pihole docker compose and config files
-  ansible.builtin.shell: |
-      mkdir -p /home/{{ ansible_user }}/compose-files/pihole || true
-      cp -r ansible/roles/pihole/files/* /home/{{ ansible_user }}/compose-files/pihole
-  args:
-    chdir: /home/{{ ansible_user }}/{{ project }}
-
 - name: Ensure pihole and update is up and running
   ansible.builtin.shell:
   become: yes
   args:
-    chdir: "/home/{{ ansible_user }}/compose-files/pihole/"
+    chdir: "~/ansible-collections/homelab/roles/pihole/files"
     cmd: docker compose up -d --force-recreate
 
 - name: Docker compose ps
   ansible.builtin.shell:
   become: yes
   args:
-    chdir: "/home/{{ ansible_user }}/compose-files/pihole/"
+    chdir: "~/ansible-collections/homelab/roles/pihole/files"
     cmd: docker compose ps
   register: docker_compose_ps_output
 

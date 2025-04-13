@@ -48,6 +48,7 @@ terraform.rc
 
 #Ignore Envrionment Variables
 .envrc
+.env
 
 #Ignore Kubeconfig files
 kube_config

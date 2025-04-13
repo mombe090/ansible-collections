@@ -1,8 +1,7 @@
-- name: Clone gitlab repo
+- name: Clone Ansible Collections Repo
   ansible.builtin.git:
-    repo: 'ssh://git@git.home.mombesoft.com:2222/{{ ansible_user }}/{{ item }}.git'
-    version: 'develop'
-    accept_hostkey: true
-    dest: '~/{{ item }}'
+    repo: https://github.com/mombe090/ansible-collections.git
+    version: main
+    dest: '~/ansible-collections'
     force: true
-  loop: '{{ projects }}'
+  become_user: '{{ ansible_user }}'
