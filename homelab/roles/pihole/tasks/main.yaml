@@ -1,0 +1,32 @@
+- name: Disable systemd-resolved DNSStubListener
+  ansible.builtin.shell: |
+    printf "%b  %b Disabling systemd-resolved DNSStubListener" "${OVER}" "${TICK}"
+    sed -r -i.orig 's/#?DNSStubListener=yes/DNSStubListener=no/g' /etc/systemd/resolved.conf
+    systemctl reload-or-restart systemd-resolved
+  become: yes
+
+- name: Copy pihole docker compose and config files
+  ansible.builtin.shell: |
+      mkdir -p /home/{{ ansible_user }}/compose-files/pihole || true
+      cp -r ansible/roles/pihole/files/* /home/{{ ansible_user }}/compose-files/pihole
+  args:
+    chdir: /home/{{ ansible_user }}/{{ project }}
+
+- name: Ensure pihole and update is up and running
+  ansible.builtin.shell:
+  become: yes
+  args:
+    chdir: "/home/{{ ansible_user }}/compose-files/pihole/"
+    cmd: docker compose up -d --force-recreate
+
+- name: Docker compose ps
+  ansible.builtin.shell:
+  become: yes
+  args:
+    chdir: "/home/{{ ansible_user }}/compose-files/pihole/"
+    cmd: docker compose ps
+  register: docker_compose_ps_output
+
+- name: Show docker compose ps output
+  ansible.builtin.debug:
+    var: docker_compose_ps_output.stdout

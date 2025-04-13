@@ -1,0 +1,37 @@
+version: "3"
+
+includes:
+  talos:
+    taskfile: ./src/talos/Taskfile.yaml
+    dir: ./src/talos
+  proxmox:
+    taskfile: ./src/proxmox/vm/Taskfile.yaml
+    dir: ./src/proxmox/vm
+
+
+tasks:
+  default:
+    silent: true
+    desc: "Run pre-commit hooks formatting, linting, and validate"
+    cmds:
+      - pre-commit run --all-files --color never
+
+  ####################################################################
+  #   Generate Terraform Module Documentation using terraform-docs   #
+  #   https://github.com/terraform-docs/terraform-docs               #
+  ####################################################################
+  generate-docs:
+    env:
+      modules: "src/talos src/proxmox/vm src/proxmox/lxc"
+    cmds:
+      - |
+        for module in ${modules}; do
+          terraform-docs --config ./.terraform-docs.yml ${module}
+        done
+
+  tf-cleanup:
+    silent: true
+    desc: "Cleanup .terraform directories"
+    cmds:
+      - find ./ -type d -name ".terraform" -exec rm -rf {} +
+      - find ./ -type f -name "*.lock.hcl" -delete

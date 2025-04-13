@@ -1,7 +1,57 @@
----
-- name: Download Distribution Images
-  hosts: proxmox
+#---
+#- name: Install Proxmoxer
+#  hosts: pve2
+#  gather_facts: yes
+#  become: yes
+#  tasks:
+#    - name: Install Proxmoxer
+#      pip:
+#        name: proxmoxer
+#        state: present
+#        break_system_packages: yes
+#
+#- name: Install LXC
+#  hosts: pve2
+#  gather_facts: yes
+#  become: yes
+#  roles:
+#    - name: lxc
+#      vars:
+#        vmid: 104
+#        name: dns-server
+#        template_datastore: iso_images_nfs
+#        os_template: ubuntu-24.04-standard_24.04-2_amd64.tar.zst
+#        ip_address: 192.168.10.4
+#        cores: 1
+#        memory: 1024
+#        disk_size: 5
+#
+
+#- name: Download Distribution Images
+#  hosts: proxmox
+#  gather_facts: yes
+#  become: yes
+#  roles:
+#    - name: get_cloud_images_proxmox
+
+#- name: Install Docker
+#  hosts: dns
+#  gather_facts: yes
+#  become: yes
+#
+#  vars:
+#    docker_users:
+#      - "mombe090"
+#    pip_install_packages:
+#      - name: docker
+#  roles:
+#    - name: geerlingguy.pip
+#    - name: geerlingguy.docker
+
+- name: Install Pihole
+  hosts: dns
   gather_facts: yes
   become: yes
+
   roles:
-    - name: get_cloud_images_proxmox
+    - name: pihole

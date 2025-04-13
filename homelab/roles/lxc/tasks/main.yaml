@@ -1,0 +1,27 @@
+- name: Creating LXC Container
+  community.general.proxmox:
+    vmid: '{{ vmid }}'
+    timezone: host
+
+    node: '{{ node_name }}'
+    api_user: '{{ api_user }}'
+    api_password: "{{ api_password }}"
+    api_host: '{{ api_host }}'
+
+    password: "{{ root_password }}"
+    pubkey: "{{ pub_key }}"
+    hostname: '{{ hostname }}'
+
+    ostype: '{{ os_type }}'
+    ostemplate: '{{ template_datastore }}:vztmpl/{{ os_template }}'
+
+    #hookscript: 'local:snippets/pdm_hookscript.sh'
+
+    cores: '{{ cores }}'
+    memory: '{{ memory }}'
+    disk: 'local-lvm:{{ disk_size }}'
+    nameserver: '{{ nameserver }}'
+    searchdomain: '{{ searchdomain }}'
+    netif:
+      net0: 'name=eth0,gw={{ gateway }},ip={{ ip_address }}/{{ netmask }},bridge={{ bridge }}'
+    onboot: '{{ onboot }}'

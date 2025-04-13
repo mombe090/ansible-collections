@@ -19,3 +19,8 @@ distributions:
     url: https://download.sys.truenas.net/TrueNAS-SCALE-ElectricEel/24.10.2.1/TrueNAS-SCALE-24.10.2.1.iso
     checksum: sha256:44fe9b7f889d835018059e2593d1aa507f6cf1dbf66185864a190a942ea9d136
     when: inventory_hostname == 'pve2'
+
+  - name: proxmox-backup-server-3.4
+    url: https://enterprise.proxmox.com/iso/proxmox-backup-server_3.4-1.iso
+    checksum: sha256:ed4777f570f2589843765fff9e942288ff16a6cc3728655733899188479b7e08
+    when: inventory_hostname == 'pve2'
