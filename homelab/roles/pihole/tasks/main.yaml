@@ -13,6 +13,7 @@
     cmd: |
       docker compose down
       docker compose up -d
+  become_user: "{{ ansible_user }}"
 
 - name: Docker compose ps
   ansible.builtin.shell:
