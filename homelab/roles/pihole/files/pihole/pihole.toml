@@ -32,7 +32,9 @@ hosts = [
 # Possible values are:
 #     Array of CNAMEs each on in one of the following forms: "<cname>,<target>[,<TTL>]"
 cnameRecords = [
-  "pihole.home.mombesoft.com,dns-principal"
+  "truenas.home.mombesoft.com,truenas",
+  "pbs.home.mombesoft.com,pbs",
+  "dns.home.mombesoft.com,dns-principal",
 ]
 
 # Use this option to control deep CNAME inspection. Disabling it might be beneficial
