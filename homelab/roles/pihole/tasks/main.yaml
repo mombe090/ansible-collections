@@ -28,15 +28,3 @@
   ansible.builtin.debug:
     var: docker_compose_ps_output.stdout
   become_user: "{{ ansible_user }}"
-
-- name: Update dns.hosts
-  ansible.builtin.command:
-    cmd: pihole-FTL --config dns.hosts '{{ pihole_dns_records | to_json }}'
-  register: ftl_dns_hosts_response
-  changed_when: ftl_dns_hosts_response.rc != 0
-
-- name: Update dns.cnameRecords
-  ansible.builtin.command:
-    cmd: pihole-FTL --config dns.cnameRecords '{{ pihole_dns_cname_records | to_json }}'
-  register: ftl_dns_cname_records_response
-  changed_when: ftl_dns_cname_records_response.rc != 0
