@@ -39,7 +39,6 @@ services:
       PIHOLE_DNS_: '172.30.0.80#5053'
       DNSMASQ_LISTENING: 'all'
       VIRTUAL_HOST: dns.home.mombesoft.com
-      FTLCONF_dns_upstreams: '1.1.1.1;8.8.8.8;8.8.4.4'
     volumes:
       - './etc-pihole:/etc/pihole'
       - './etc-dnsmasq.d:/etc/dnsmasq.d'
