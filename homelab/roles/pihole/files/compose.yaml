@@ -40,8 +40,7 @@ services:
       DNSMASQ_LISTENING: 'all'
      # VIRTUAL_HOST: dns.home.mombesoft.com
     volumes:
-      - './etc-pihole:/etc/pihole'
-      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+      - './pihole:/etc/pihole'
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
