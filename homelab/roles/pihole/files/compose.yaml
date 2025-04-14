@@ -38,7 +38,7 @@ services:
       FTLCONF_webserver_api_password: '${PI_HOLE_ADMIN_PASSWORD}'
       PIHOLE_DNS_: '172.30.0.80#5053'
       DNSMASQ_LISTENING: 'all'
-      VIRTUAL_HOST: dns.home.mombesoft.com
+     # VIRTUAL_HOST: dns.home.mombesoft.com
     volumes:
       - './etc-pihole:/etc/pihole'
       - './etc-dnsmasq.d:/etc/dnsmasq.d'
