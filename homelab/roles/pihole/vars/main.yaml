@@ -1,0 +1,4 @@
+pihole_dns_records:
+  - 127.0.0.1 pi.hole
+pihole_dns_cname_records:
+  - pihole.lan,pi.hole
