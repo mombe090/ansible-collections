@@ -14,6 +14,24 @@ upstreams = [
   "8.8.4.4"
 ] ### CHANGED, default = []
 
+# Array of custom DNS records
+# Example: hosts = [ "127.0.0.1 mylocal", "192.168.0.1 therouter" ]
+#
+# Possible values are:
+#     Array of custom DNS records each one in HOSTS form: "IP HOSTNAME"
+hosts = [
+  "192.168.10.4 dns.home.mombesoft.com"
+]
+
+# List of CNAME records which indicate that <cname> is really <target>. If the <TTL> is
+# given, it overwrites the value of local-ttl
+#
+# Possible values are:
+#     Array of CNAMEs each on in one of the following forms: "<cname>,<target>[,<TTL>]"
+cnameRecords = [
+  "dns.home.mombesoft.com,pihole.home.mombesoft.com"
+]
+
 # Use this option to control deep CNAME inspection. Disabling it might be beneficial
 # for very low-end devices
 CNAMEdeepInspect = true
@@ -94,15 +112,6 @@ replyWhenBusy = "ALLOW"
 # Note that large values may render whitelisting ineffective due to client-side
 # caching of blocked queries.
 blockTTL = 2
-
-# Array of custom DNS records
-# Example: hosts = [ "127.0.0.1 mylocal", "192.168.0.1 therouter" ]
-#
-# Possible values are:
-#     Array of custom DNS records each one in HOSTS form: "IP HOSTNAME"
-hosts = [
-  "192.168.10.4 dns.home.mombesoft.com"
-]
 
 # If set, A and AAAA queries for plain names, without dots or domain parts, are never
 # forwarded to upstream nameservers
@@ -196,15 +205,6 @@ listeningMode = "ALL" ### CHANGED, default = "LOCAL"
 
 # Log DNS queries and replies to pihole.log
 queryLogging = true
-
-# List of CNAME records which indicate that <cname> is really <target>. If the <TTL> is
-# given, it overwrites the value of local-ttl
-#
-# Possible values are:
-#     Array of CNAMEs each on in one of the following forms: "<cname>,<target>[,<TTL>]"
-cnameRecords = [
-
-]
 
 # Port used by the DNS server
 port = 53
