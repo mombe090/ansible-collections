@@ -20,7 +20,7 @@ upstreams = [
 # Possible values are:
 #     Array of custom DNS records each one in HOSTS form: "IP HOSTNAME"
 hosts = [
-  "192.168.10.4 dns.home.mombesoft.com"
+  "192.168.10.4 dns-principal"
 ]
 
 # List of CNAME records which indicate that <cname> is really <target>. If the <TTL> is
@@ -29,7 +29,7 @@ hosts = [
 # Possible values are:
 #     Array of CNAMEs each on in one of the following forms: "<cname>,<target>[,<TTL>]"
 cnameRecords = [
-  "dns.home.mombesoft.com,pihole.home.mombesoft.com"
+  "<dns-principal>,<pihole.home.mombesoft.com>"
 ]
 
 # Use this option to control deep CNAME inspection. Disabling it might be beneficial
