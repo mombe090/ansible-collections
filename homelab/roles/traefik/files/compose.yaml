@@ -19,7 +19,7 @@ services:
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
     volumes:
       - /run/docker.sock:/run/docker.sock:ro
-      - /etc/traefik/traefik.yml/traefik.yml:/etc/traefik/traefik.yml:ro
+      - /etc/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - /etc/traefik/data/certs/:/var/traefik/certs/:rw
       - /etc/traefik/config/conf.d:/etc/traefik/conf.d/:ro
     labels:
