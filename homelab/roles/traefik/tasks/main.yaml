@@ -29,7 +29,7 @@
   become: yes
   loop:
     - { src: '{{ role_path }}/templates/traefik.external.yaml.j2', dest: '{{ traefik_dir }}/config/conf.d/external-services.yml' }
-    - { src: '{{ role_path }}/templates/traefik.config.yaml.j2', dest: '{{ traefik_dir }}/config/traefik.yml' }
+    - { src: '{{ role_path }}/templates/traefik.config.yaml.j2', dest: '{{ traefik_dir }}/traefik.yml' }
     - { src: '{{ role_path }}/templates/authentik.config.yaml.j2', dest: '{{ traefik_dir }}/config/conf.d/authentik.middleware.yml' }
 
 - name: Ensure proxy docker network exists
