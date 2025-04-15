@@ -26,7 +26,7 @@ providers:
 certificatesResolvers:
   cloudflare:
     acme:
-      email: yayamombeya090@gmail.com
+      email: '{{ cloudflare_email }}'
       storage: /var/traefik/certs/acme.json
       caServer: https://acme-v02.api.letsencrypt.org/directory # prod (default)
       #caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging

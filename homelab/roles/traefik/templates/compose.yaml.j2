@@ -19,9 +19,9 @@ services:
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
     volumes:
       - /run/docker.sock:/run/docker.sock:ro
-      - /etc/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - /etc/traefik/data/certs/:/var/traefik/certs/:rw
-      - /etc/traefik/config/conf.d:/etc/traefik/conf.d/:ro
+      - '{{ traefik_dir }}/traefik.yml:/etc/traefik/traefik.yml:ro'
+      - '{{ traefik_dir }}/data/certs/:/var/traefik/certs/:rw'
+      - '{{ traefik_dir }}/config/conf.d:/etc/traefik/conf.d/:ro'
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.entrypoints=http"
