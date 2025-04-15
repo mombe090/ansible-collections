@@ -1,0 +1,54 @@
+http:
+  routers:
+  {% for service in services %}
+  {{ service.name }}:
+      entryPoints:
+        - "https"
+      rule: "Host(`{{ service.hostname }}`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      service: {{ service.name }}
+      tls: {}
+
+  {% endfor %}
+
+
+  services:
+  {% for service in services %}
+  {{ service.name }}:
+      loadBalancer:
+        servers:
+          - url: "{{ service.protocol }}://{{ service.ip }}{% if service.port != 80 %}:{{ service.port}}{% endif %}"
+        passHostHeader: true
+
+  {% endfor %}
+
+  middlewares:
+    https-redirectscheme:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    default-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 15552000
+        customFrameOptionsValue: SAMEORIGIN
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+
+    default-whitelist:
+      ipAllowList:
+        sourceRange:
+          - "192.168.10.0/24"
+
+    secured:
+      chain:
+        middlewares:
+          - default-whitelist
+          - default-headers

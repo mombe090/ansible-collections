@@ -23,8 +23,7 @@ hosts = [
   "192.168.10.1 router",
   "192.168.10.2 truenas",
   "192.168.10.3 pbs",
-  "192.168.10.4 dns-principal",
-  "192.168.10.5 proxy"
+  "192.168.10.4 dns-principal"
 ]
 
 # List of CNAME records which indicate that <cname> is really <target>. If the <TTL> is
@@ -36,7 +35,6 @@ cnameRecords = [
   "truenas.home.mombesoft.com,truenas",
   "pbs.home.mombesoft.com,pbs",
   "dns.home.mombesoft.com,dns-principal",
-  "proxy.home.mombesoft.com,proxy"
 ]
 
 # Use this option to control deep CNAME inspection. Disabling it might be beneficial
