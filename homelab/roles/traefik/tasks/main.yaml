@@ -1,3 +1,12 @@
+- name: Clone Ansible Collections Repo
+  ansible.builtin.git:
+    repo: https://github.com/mombe090/ansible-collections.git
+    version: main
+    dest: '~/ansible-collections'
+    force: true
+  become_user: '{{ ansible_user }}'
+
+
 - name: Make sure docker is running
   ansible.builtin.systemd_service:
     name: docker
@@ -23,14 +32,25 @@
     - { src: '{{ role_path }}/templates/traefik.config.yaml.j2', dest: '{{ traefik_dir }}/config/traefik.yml' }
     - { src: '{{ role_path }}/templates/authentik.config.yaml.j2', dest: '{{ traefik_dir }}/config/conf.d/authentik.middleware.yml' }
 
+- name: Ensure proxy docker network exists
+  docker_network:
+    name: proxy
+    state: present
+
 - name: Tear down existing services
   community.docker.docker_compose_v2:
     project_src: "~/ansible-collections/homelab/roles/traefik/files"
     state: absent
   become_user: "{{ ansible_user }}"
+  environment:
+    CLOUD_FLARE_HOME_API_TOKEN: "{{ lookup('env', 'CLOUD_FLARE_HOME_API_TOKEN') }}"
+    TRAEFIK_DASHBOARD_CREDENTIALS: "{{ lookup('env', 'TRAEFIK_DASHBOARD_CREDENTIALS') }}"
 
 - name: Ensure Traefik is running
   community.docker.docker_compose_v2:
     project_src: "~/ansible-collections/homelab/roles/traefik/files"
     state: present
   become_user: "{{ ansible_user }}"
+  environment:
+    CLOUD_FLARE_HOME_API_TOKEN: "{{ lookup('env', 'CLOUD_FLARE_HOME_API_TOKEN') }}"
+    TRAEFIK_DASHBOARD_CREDENTIALS: "{{ lookup('env', 'TRAEFIK_DASHBOARD_CREDENTIALS') }}"
