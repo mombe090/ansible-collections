@@ -51,7 +51,7 @@
 
 - name: Ensure Traefik is running
   community.docker.docker_compose_v2:
-    project_src: "{{ ansible_user }}"
+    project_src: "{{ traefik_dir }}"
     state: present
   become_user: "{{ ansible_user }}"
   environment:
