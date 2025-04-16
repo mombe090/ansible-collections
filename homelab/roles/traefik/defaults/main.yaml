@@ -3,7 +3,6 @@ traefik_dir: /etc/traefik
 services: []
 cloudflare_email: '{{ lookup("env", "CLOUD_FLARE_HOME_EMAIL") }}'
 cloudflare_api_key: '{{ lookup("env", "CLOUD_FLARE_HOME_API_TOKEN") }}'
-domain: '{{ lookup("env", "HOMELAB_DOMAIN") }}'
 
 #generate password with 'htpasswd -nb user password'
 traefik_dashboard_credentials: "{{ ansible_user }}:$apr1$XYCKwbxT$Y5u0wFVv792SuOCrEm5ru/"

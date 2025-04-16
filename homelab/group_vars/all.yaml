@@ -1,1 +1,2 @@
 ansible_user: mombe090
+domain: '{{ lookup("env", "HOMELAB_DOMAIN") }}'
