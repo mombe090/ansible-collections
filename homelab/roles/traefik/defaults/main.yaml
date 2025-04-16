@@ -1,6 +1,13 @@
 ---
 traefik_dir: /etc/traefik
-services: []
+
+services:
+  - name: truenas
+    hostname: truenas.home.{{ domain }}
+    ip: 192.168.10.2
+    port: 443
+    protocol: https
+
 cloudflare_email: '{{ lookup("env", "CLOUD_FLARE_HOME_EMAIL") }}'
 cloudflare_api_key: '{{ lookup("env", "CLOUD_FLARE_HOME_API_TOKEN") }}'
 cloudflare_ca_server: https://acme-v02.api.letsencrypt.org/directory
