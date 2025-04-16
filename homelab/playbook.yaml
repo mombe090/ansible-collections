@@ -57,12 +57,12 @@
       vars:
         project: ansible-collections
 
-- name: Install Traefik
-  hosts: proxy
-  gather_facts: yes
-  become: yes
-
-  roles:
-    - name: traefik
-      vars:
-        project: ansible-collections
+#- name: Install Traefik
+#  hosts: proxy
+#  gather_facts: yes
+#  become: yes
+#
+#  roles:
+#    - name: traefik
+#      vars:
+#        project: ansible-collections

@@ -5,19 +5,26 @@
     systemctl reload-or-restart systemd-resolved
   become: yes
 
+- name: Ensure {{ pihole_dir }} directory exists
+  become: yes
+  ansible.builtin.file:
+    path: '{{ pihole_dir }}'
+    state: directory
+
 - name: Copy Pihole Config
   ansible.builtin.template:
     src: '{{ item.src }}'
     dest: '{{ item.dest }}'
   become: yes
   loop:
-    - { src: '{{ role_path }}/templates/pihole.toml.j2', dest: '~/ansible-collections/homelab/roles/pihole/files/pihole/pihole.toml' }
+    - { src: '{{ role_path }}/templates/compose.yaml.j2', dest: '{{ pihole_dir }}/compose.yaml' }
+    - { src: '{{ role_path }}/templates/pihole.toml.j2', dest: '{{ pihole_dir }}/pihole.toml' }
 
 - name: Ensure pihole and update is up and running
   ansible.builtin.shell:
   become: yes
   args:
-    chdir: "~/ansible-collections/homelab/roles/pihole/files"
+    chdir: "{{ pihole_dir }}"
     cmd: |
       docker compose down
       docker compose up -d
@@ -27,7 +34,7 @@
   ansible.builtin.shell:
   become: yes
   args:
-    chdir: "~/ansible-collections/homelab/roles/pihole/files"
+    chdir: "{{ pihole_dir }}"
     cmd: docker compose ps
   register: docker_compose_ps_output
   become_user: "{{ ansible_user }}"

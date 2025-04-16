@@ -31,9 +31,9 @@ hosts = [
 # Possible values are:
 #     Array of CNAMEs each on in one of the following forms: "<cname>,<target>[,<TTL>]"
 cnameRecords = [
-  "truenas.home.mombesoft.com,proxy.home.mombesoft.com",
-  "pbs.home.mombesoft.com,proxy.home.mombesoft.com",
-  "dns.home.mombesoft.com,proxy.home.mombesoft.com",
+  {% for cname in cnameRecords %}
+  {{ cname }}
+  {% endfor %}
 ]
 
 # Use this option to control deep CNAME inspection. Disabling it might be beneficial

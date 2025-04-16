@@ -41,7 +41,7 @@ services:
       DNSMASQ_LISTENING: 'all'
      # VIRTUAL_HOST: dns.home.mombesoft.com
     volumes:
-      - './pihole:/etc/pihole'
+      - '{{ pihole_dir }}/pihole.toml:/etc/pihole/pihole.toml'
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
