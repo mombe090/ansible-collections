@@ -21,10 +21,10 @@ upstreams = [
 #     Array of custom DNS records each one in HOSTS form: "IP HOSTNAME"
 hosts = [
   "192.168.10.1 router",
-  "192.168.10.2 truenas-srv.home.mombesoft",
-  "192.168.10.3 pbs-srv.home.mombesoft",
-  "192.168.10.4 dns-principal-srv.home.mombesoft",
-  "192.168.10.5 proxy-srv.home.mombesoft"
+  "192.168.10.2 truenas-srv.home.mombesoft.com",
+  "192.168.10.3 pbs-srv.home.mombesoft.com",
+  "192.168.10.4 dns-principal-srv.home.mombesoft.com",
+  "192.168.10.5 proxy-srv.home.mombesoft.com"
 ]
 
 # List of CNAME records which indicate that <cname> is really <target>. If the <TTL> is
