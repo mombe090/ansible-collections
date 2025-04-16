@@ -3,7 +3,9 @@ traefik_dir: /etc/traefik
 services: []
 cloudflare_email: 'yayamombeya090@gmail.com'
 cloudflare_api_key: '{{ lookup("env", "CLOUD_FLARE_HOME_API_TOKEN") }}'
-traefik_dashboard_credentials: '{{ lookup("env", "TRAEFIK_DASHBOARD_CREDENTIALS") }}'
+
+#generate password with 'htpasswd -nb user password'
+traefik_dashboard_credentials: "{{ ansible_user }}:$apr1$XYCKwbxT$Y5u0wFVv792SuOCrEm5ru/"
 traefik_labels:
   - 'traefik.enable=true'
   - 'traefik.http.routers.traefik.entrypoints=http'
