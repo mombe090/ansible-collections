@@ -1,24 +1,25 @@
 ---
 traefik_dir: /etc/traefik
 services: []
-cloudflare_email: 'yayamombeya090@gmail.com'
+cloudflare_email: '{{ lookup("env", "CLOUD_FLARE_HOME_EMAIL") }}'
 cloudflare_api_key: '{{ lookup("env", "CLOUD_FLARE_HOME_API_TOKEN") }}'
+domain: '{{ lookup("env", "HOMELAB_DOMAIN") }}'
 
 #generate password with 'htpasswd -nb user password'
 traefik_dashboard_credentials: "{{ ansible_user }}:$apr1$XYCKwbxT$Y5u0wFVv792SuOCrEm5ru/"
 traefik_labels:
   - 'traefik.enable=true'
   - 'traefik.http.routers.traefik.entrypoints=http'
-  - 'traefik.http.routers.traefik.rule=Host(`proxy.home.mombesoft.com`)'
+  - 'traefik.http.routers.traefik.rule=Host(`proxy.home.{{ domain }}`)'
   - 'traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}'
   - 'traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https'
   - 'traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https'
   - 'traefik.http.routers.traefik.middlewares=traefik-https-redirect'
   - 'traefik.http.routers.traefik-secure.entrypoints=https'
-  - 'traefik.http.routers.traefik-secure.rule=Host(`proxy.home.mombesoft.com`)'
+  - 'traefik.http.routers.traefik-secure.rule=Host(`proxy.home.{{ domain }}`)'
   - 'traefik.http.routers.traefik-secure.middlewares=traefik-auth'
   - 'traefik.http.routers.traefik-secure.tls=true'
   - 'traefik.http.routers.traefik-secure.tls.certresolver=cloudflare'
-  - 'traefik.http.routers.traefik-secure.tls.domains[0].main=home.mombesoft.com'
-  - 'traefik.http.routers.traefik-secure.tls.domains[0].sans=*.home.mombesoft.com'
+  - 'traefik.http.routers.traefik-secure.tls.domains[0].main=home{{ domain }}'
+  - 'traefik.http.routers.traefik-secure.tls.domains[0].sans=*.home.{{ domain }}'
   - 'traefik.http.routers.traefik-secure.service=api@internal'
