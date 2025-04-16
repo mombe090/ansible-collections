@@ -47,15 +47,15 @@
 #  roles:
 #    - name: geerlingguy.pip
 #    - name: geerlingguy.docker
-#- name: Install Pihole
-#  hosts: dns
-#  gather_facts: yes
-#  become: yes
-#
-#  roles:
-#    - name: pihole
-#      vars:
-#        project: ansible-collections
+- name: Install Pihole
+  hosts: dns
+  gather_facts: yes
+  become: yes
+
+  roles:
+    - name: pihole
+      vars:
+        project: ansible-collections
 
 - name: Install Traefik
   hosts: proxy

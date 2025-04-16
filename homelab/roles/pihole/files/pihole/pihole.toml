@@ -21,10 +21,10 @@ upstreams = [
 #     Array of custom DNS records each one in HOSTS form: "IP HOSTNAME"
 hosts = [
   "192.168.10.1 router",
-  "192.168.10.2 truenas",
-  "192.168.10.3 pbs",
-  "192.168.10.4 dns-principal",
-  "192.168.10.5 proxy"
+  "192.168.10.2 truenas-srv.home.mombesoft",
+  "192.168.10.3 pbs-srv.home.mombesoft",
+  "192.168.10.4 dns-principal-srv.home.mombesoft",
+  "192.168.10.5 proxy-srv.home.mombesoft"
 ]
 
 # List of CNAME records which indicate that <cname> is really <target>. If the <TTL> is
@@ -33,10 +33,9 @@ hosts = [
 # Possible values are:
 #     Array of CNAMEs each on in one of the following forms: "<cname>,<target>[,<TTL>]"
 cnameRecords = [
-  "truenas.home.mombesoft.com,truenas",
-  "pbs.home.mombesoft.com,pbs",
-  "dns.home.mombesoft.com,dns-principal",
-  "proxy.home.mombesoft.com,proxy"
+  "truenas.home.mombesoft.com,proxy-srv.home.mombesoft",
+  "pbs.home.mombesoft.com,proxy-srv.home.mombesoft",
+  "dns.home.mombesoft.com,proxy-srv.home.mombesoft",
 ]
 
 # Use this option to control deep CNAME inspection. Disabling it might be beneficial
