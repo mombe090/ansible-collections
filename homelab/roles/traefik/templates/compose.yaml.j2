@@ -23,21 +23,21 @@ services:
       - '{{ traefik_dir }}/data/certs/:/var/traefik/certs/:rw'
       - '{{ traefik_dir }}/config/conf.d:/etc/traefik/conf.d/:ro'
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.entrypoints=http"
-      - "traefik.http.routers.traefik.rule=Host(`proxy.home.mombesoft.com`)"
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
-      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
-      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
-      - "traefik.http.routers.traefik-secure.entrypoints=https"
-      - "traefik.http.routers.traefik-secure.rule=Host(`proxy.home.mombesoft.com`)"
-      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
-      - "traefik.http.routers.traefik-secure.tls=true"
-      - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
-      - "traefik.http.routers.traefik-secure.tls.domains[0].main=home.mombesoft.com"
-      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.home.mombesoft.com"
-      - "traefik.http.routers.traefik-secure.service=api@internal"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.traefik.entrypoints=http'
+      - 'traefik.http.routers.traefik.rule=Host(`proxy.home.mombesoft.com`)'
+      - 'traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}'
+      - 'traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https'
+      - 'traefik.http.routers.traefik.middlewares=traefik-https-redirect'
+      - 'traefik.http.routers.traefik-secure.entrypoints=https'
+      - 'traefik.http.routers.traefik-secure.rule=Host(`proxy.home.mombesoft.com`)'
+      - 'traefik.http.routers.traefik-secure.middlewares=traefik-auth'
+      - 'traefik.http.routers.traefik-secure.tls=true'
+      - 'traefik.http.routers.traefik-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.traefik-secure.tls.domains[0].main=home.mombesoft.com'
+      - 'traefik.http.routers.traefik-secure.tls.domains[0].sans=*.home.mombesoft.com'
+      - 'traefik.http.routers.traefik-secure.service=api@internal'
 
 networks:
   proxy:
