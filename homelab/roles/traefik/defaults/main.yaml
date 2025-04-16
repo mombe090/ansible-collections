@@ -3,6 +3,9 @@ traefik_dir: /etc/traefik
 services: []
 cloudflare_email: '{{ lookup("env", "CLOUD_FLARE_HOME_EMAIL") }}'
 cloudflare_api_key: '{{ lookup("env", "CLOUD_FLARE_HOME_API_TOKEN") }}'
+cloudflare_ca_server: https://acme-v02.api.letsencrypt.org/directory
+#cloudflare_ca_server: https://acme-staging-v02.api.letsencrypt.org/directory
+
 
 #generate password with 'htpasswd -nb user password'
 traefik_dashboard_credentials: "{{ ansible_user }}:$apr1$XYCKwbxT$Y5u0wFVv792SuOCrEm5ru/"

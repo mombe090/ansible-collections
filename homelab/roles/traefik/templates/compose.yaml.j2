@@ -18,14 +18,13 @@ services:
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
     volumes:
       - /run/docker.sock:/run/docker.sock:ro
-      - '{{ traefik_dir }}/traefik.yml:/etc/traefik/traefik.yml:ro'
+      - '{{ traefik_dir }}/traefik.yml:{{ traefik_dir }}/traefik.yml:ro'
       - '{{ traefik_dir }}/data/certs/:/var/traefik/certs/:rw'
-      - '{{ traefik_dir }}/config/conf.d:/etc/traefik/conf.d/:ro'
+      - '{{ traefik_dir }}/config/conf.d:{{ traefik_dir }}/conf.d/:ro'
     labels:
       {% for label in traefik_labels %}
       - {{ label }}
       {% endfor %}
-
 networks:
   proxy:
     external: true
