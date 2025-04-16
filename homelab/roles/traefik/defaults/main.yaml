@@ -3,4 +3,6 @@ traefik_dir: /etc/traefik
 services: []
 cloudflare_email: 'yayamombeya090@gmail.com'
 cloudflare_api_key: '{{ lookup("env", "CLOUD_FLARE_HOME_API_TOKEN") }}'
-traefik_dashboard_credentials: '{{ lookup("env", "TRAEFIK_DASHBOARD_CREDENTIALS") }}'
+
+## Generated with echo $(htpasswd -nB mombe090) | sed -e s/\\$/\\$\\$/g
+traefik_dashboard_credentials: '{{ ansible_user }}:$$2y$$05$$WMjNzFJVPC1URPn.0CSFnu1sYEImx/KwYRQ6gkPfsIbrGTYFmv/S6'
