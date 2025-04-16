@@ -3,7 +3,7 @@ traefik_dir: /etc/traefik
 
 services:
   - name: truenas
-    hostname: truenas.home.{{ domain }}
+    hostname: truenas.{{ domain }}
     ip: 192.168.10.2
     port: 443
     protocol: https
@@ -19,16 +19,16 @@ traefik_dashboard_credentials: "{{ ansible_user }}:$apr1$XYCKwbxT$Y5u0wFVv792SuO
 traefik_labels:
   - 'traefik.enable=true'
   - 'traefik.http.routers.traefik.entrypoints=http'
-  - 'traefik.http.routers.traefik.rule=Host(`proxy.home.{{ domain }}`)'
+  - 'traefik.http.routers.traefik.rule=Host(`proxy.{{ domain }}`)'
   - 'traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}'
   - 'traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https'
   - 'traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https'
   - 'traefik.http.routers.traefik.middlewares=traefik-https-redirect'
   - 'traefik.http.routers.traefik-secure.entrypoints=https'
-  - 'traefik.http.routers.traefik-secure.rule=Host(`proxy.home.{{ domain }}`)'
+  - 'traefik.http.routers.traefik-secure.rule=Host(`proxy.{{ domain }}`)'
   - 'traefik.http.routers.traefik-secure.middlewares=traefik-auth'
   - 'traefik.http.routers.traefik-secure.tls=true'
   - 'traefik.http.routers.traefik-secure.tls.certresolver=cloudflare'
   - 'traefik.http.routers.traefik-secure.tls.domains[0].main=home{{ domain }}'
-  - 'traefik.http.routers.traefik-secure.tls.domains[0].sans=*.home.{{ domain }}'
+  - 'traefik.http.routers.traefik-secure.tls.domains[0].sans=*.{{ domain }}'
   - 'traefik.http.routers.traefik-secure.service=api@internal'

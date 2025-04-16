@@ -1,0 +1,6 @@
+dns_hosts:
+  - "192.168.10.1 router"
+  - "192.168.10.2 truenas-srv.{{ domain }}"
+  - "192.168.10.3 pbs-srv.{{ domain }}"
+  - "192.168.10.4 dns-principal-srv.{{ domain }}"
+  - "192.168.10.5 proxy.{{ domain }}"

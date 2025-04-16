@@ -5,6 +5,14 @@
     systemctl reload-or-restart systemd-resolved
   become: yes
 
+- name: Copy Pihole Config
+  ansible.builtin.template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+  become: yes
+  loop:
+    - { src: '{{ role_path }}/templates/pihole.toml.j2', dest: '~/ansible-collections/homelab/roles/pihole/files/pihole/pihole.toml' }
+
 - name: Ensure pihole and update is up and running
   ansible.builtin.shell:
   become: yes
