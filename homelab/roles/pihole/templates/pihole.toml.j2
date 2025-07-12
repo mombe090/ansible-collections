@@ -21,7 +21,7 @@ upstreams = [
 #     Array of custom DNS records each one in HOSTS form: "IP HOSTNAME"
 hosts = [
   {% for host in dns_hosts %}
-  {{ host }}
+  "{{ host }}",
   {% endfor %}
 ]
 
@@ -32,7 +32,7 @@ hosts = [
 #     Array of CNAMEs each on in one of the following forms: "<cname>,<target>[,<TTL>]"
 cnameRecords = [
   {% for cname in cnameRecords %}
-  {{ cname }}
+  "{{ cname }}",
   {% endfor %}
 ]
 

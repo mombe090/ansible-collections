@@ -1,0 +1,23 @@
+---
+- name: Install DNS server with Pihole and Cloudflared
+  hosts:
+    - dns
+    - dns2
+  gather_facts: yes
+  become: yes
+  roles:
+    - name: pihole
+      vars:
+        project: '{{ lookup("env", "PROJECT_NAME") }}'
+        dns_hosts:
+          - '192.168.10.1 router'
+          - '192.168.10.2 truenas-srv.{{ domain }}'
+          - '192.168.10.3 pbs-srv.{{ domain }}'
+          - '192.168.10.5 {{ proxy_host }}'
+          - '192.168.10.100 dns-principal-srv.{{ domain }}'
+          - '192.168.10.200 dns-secondary-srv.{{ domain }}'
+        cnameRecords:
+          - 'truenas.{{ domain }},{{ proxy_host }}'
+          - 'pbs.{{ domain }},{{ proxy_host }}'
+          - 'dns.{{ domain }},{{ proxy_host }}'
+          - 'dns2.{{ domain }},{{ proxy_host }}'

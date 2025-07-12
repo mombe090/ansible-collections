@@ -1,3 +1,3 @@
-ansible_user: mombe090
+ansible_user: '{{ lookup("env", "HOMELAB_USER")}}'
 domain: '{{ lookup("env", "HOMELAB_DOMAIN") }}'
 proxy_host : 'proxy.{{ lookup("env", "HOMELAB_DOMAIN") }}'

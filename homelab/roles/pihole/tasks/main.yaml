@@ -20,26 +20,21 @@
     - { src: '{{ role_path }}/templates/compose.yaml.j2', dest: '{{ pihole_dir }}/compose.yaml' }
     - { src: '{{ role_path }}/templates/pihole.toml.j2', dest: '{{ pihole_dir }}/pihole.toml' }
 
+- name: Tear down existing services
+  become: yes
+  community.docker.docker_compose_v2:
+    project_src: '{{ pihole_dir }}'
+    state: absent
+    remove_orphans: true
+
 - name: Ensure pihole and update is up and running
-  ansible.builtin.shell:
   become: yes
-  args:
-    chdir: "{{ pihole_dir }}"
-    cmd: |
-      docker compose down
-      docker compose up -d
-  become_user: "{{ ansible_user }}"
+  community.docker.docker_compose_v2:
+    project_src: '{{ pihole_dir }}'
+  register: output
+  environment:
+    PI_HOLE_ADMIN_PASSWORD: '{{ lookup("env", "PI_HOLE_ADMIN_PASSWORD") }}'
 
-- name: Docker compose ps
-  ansible.builtin.shell:
-  become: yes
-  args:
-    chdir: "{{ pihole_dir }}"
-    cmd: docker compose ps
-  register: docker_compose_ps_output
-  become_user: "{{ ansible_user }}"
-
-- name: Show docker compose ps output
+- name: Show compose output
   ansible.builtin.debug:
-    var: docker_compose_ps_output.stdout
-  become_user: "{{ ansible_user }}"
+    var: output

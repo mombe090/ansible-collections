@@ -1,0 +1,8 @@
+- name: Install Traefik Proxy
+  hosts: proxy
+  gather_facts: yes
+  become: yes
+  roles:
+    - name: traefik
+      vars:
+        project: '{{ lookup("env", "PROJECT_NAME") | default("ansible-collections") }}'

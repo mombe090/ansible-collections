@@ -41,28 +41,18 @@
 #
 #  vars:
 #    docker_users:
-#      - "mombe090"
+#      - "{{ lookup('env', 'HOMELAB_USER')}}"
 #    pip_install_packages:
 #      - name: docker
 #  roles:
 #    - name: geerlingguy.pip
 #    - name: geerlingguy.docker
+
 - name: Install Pihole
-  hosts: dns
+  hosts: dns, dns2
   gather_facts: yes
   become: yes
-
   roles:
     - name: pihole
       vars:
         project: ansible-collections
-
-#- name: Install Traefik
-#  hosts: proxy
-#  gather_facts: yes
-#  become: yes
-#
-#  roles:
-#    - name: traefik
-#      vars:
-#        project: ansible-collections
