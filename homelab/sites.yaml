@@ -48,11 +48,5 @@
 #    - name: geerlingguy.pip
 #    - name: geerlingguy.docker
 
-- name: Install Pihole
-  hosts: dns, dns2
-  gather_facts: yes
-  become: yes
-  roles:
-    - name: pihole
-      vars:
-        project: ansible-collections
+- import_playbook: playbooks/pihole.playbook.yaml
+- import_playbook: playbooks/traefic.playbook.yaml
