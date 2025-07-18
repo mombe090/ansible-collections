@@ -34,9 +34,8 @@ repos:
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        additional_dependencies: [ 'gibberish-detector' ]
+        additional_dependencies: ["gibberish-detector"]
         exclude: package.lock.json
-
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
@@ -44,11 +43,11 @@ repos:
     hooks:
       # Run the linter.
       - id: ruff-check
-        types_or: [ python, pyi ]
-        args: [ --fix ]
+        types_or: [python, pyi]
+        args: [--fix]
       # Run the formatter.
       - id: ruff-format
-        types_or: [ python, pyi ]
+        types_or: [python, pyi]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
@@ -63,13 +62,13 @@ repos:
         id: type-check
         entry: zsh -c 'uv run ty check'
         language: system
-        types_or: [ python, pyi ]
+        types_or: [python, pyi]
 
   - repo: local
     hooks:
       - id: markdownlint-cli2
         name: markdownlint-cli2
         description: "Checks the style of Markdown/CommonMark files."
-        entry: markdownlint-cli2 **/*.md "!.devbox" "!homelab/roles/geerlingguy.*/*.md" --fix
+        entry: markdownlint-cli2 **/*.md "!.devbox" "!homelab/roles/geerlingguy.*/*.md" "!.venv" "!.github/copilot-instructions.md" --fix
         language: node
-        types: [ markdown ]
+        types: [markdown]

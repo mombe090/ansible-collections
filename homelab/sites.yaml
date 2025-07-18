@@ -1,3 +1,4 @@
+---
 #---
 #- name: Install Proxmoxer
 #  hosts: pve2
@@ -50,3 +51,4 @@
 
 - import_playbook: playbooks/pihole.playbook.yaml
 - import_playbook: playbooks/traefic.playbook.yaml
+#- import_playbook: playbooks/netbird.playbook.yaml

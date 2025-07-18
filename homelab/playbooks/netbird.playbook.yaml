@@ -1,0 +1,9 @@
+---
+- name: Install Netbird VPN
+  hosts: proxmox
+  gather_facts: true
+  become: true
+  roles:
+    - name: netbird
+      vars:
+        netbird_auth_token: '{{ lookup("env", "NETBIRD_HOMELAB_KEY") }}'
