@@ -1,0 +1,29 @@
+- name: Set Github Token
+  ansible.builtin.set_fact:
+    github_token: "{{ lookup('env', 'HOMELAB_GITHUB_TOKEN') }}"
+
+- name: Add GitHub Token to Environment
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/{{ item }}"
+    line: "export GITHUB_TOKEN={{ github_token }}"
+    state: present
+  loop:
+    - .bashrc
+    - .profile
+    - .zshrc
+
+- name: Clone Ansible Collections Repo
+  ansible.builtin.git:
+    repo: https://github.com/{{ ansible_user }}/ansible-collections.git
+    version: main
+    dest: "~/ansible-collections"
+    force: true
+  become_user: "{{ ansible_user }}"
+
+- name: Clone Dotfiles Repo
+  ansible.builtin.git:
+    repo: https://github.com/{{ ansible_user }}/dotfiles.git
+    version: main
+    dest: "~/dotfiles"
+    force: true
+  become_user: "{{ ansible_user }}"

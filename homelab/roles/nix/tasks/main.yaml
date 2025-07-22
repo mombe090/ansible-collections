@@ -1,0 +1,50 @@
+---
+- name: Get actual user home directory
+  become: false
+  ansible.builtin.shell: "getent passwd {{ ansible_user }} | cut -d: -f6"
+  register: user_home_dir_result
+  changed_when: false
+
+- name: Set user home directory fact
+  ansible.builtin.set_fact:
+    user_home_dir: "{{ user_home_dir_result.stdout }}"
+
+- name: Debug user home directory
+  ansible.builtin.debug:
+    msg: "User home directory: {{ user_home_dir }} for user: {{ ansible_user }}"
+
+- name: Include prerequisites tasks
+  ansible.builtin.include_tasks: prerequisites.yaml
+  when: ansible_os_family == "Debian"
+
+- name: Include installation tasks
+  ansible.builtin.include_tasks: install.yaml
+  when: ansible_os_family == "Debian"
+
+- name: Include configuration tasks
+  ansible.builtin.include_tasks: configure.yaml
+  when: ansible_os_family == "Debian"
+
+- name: Include systemd service tasks
+  ansible.builtin.include_tasks: systemd.yaml
+  when: ansible_os_family == "Debian" and nix_systemd_service
+
+- name: Include user profile setup tasks
+  ansible.builtin.include_tasks: user_profile.yaml
+  when: ansible_os_family == "Debian" and nix_user_profile_setup
+
+- name: Include dotfiles setup tasks
+  ansible.builtin.include_tasks: dotfiles.yaml
+  when: ansible_os_family == "Debian"
+
+- name: Include home-manager setup tasks
+  ansible.builtin.include_tasks: home_manager.yaml
+  when: ansible_os_family == "Debian" and nix_home_manager_enabled
+
+- name: Include post-installation tasks
+  ansible.builtin.include_tasks: post_install.yaml
+  when: ansible_os_family == "Debian"
+
+- name: Include verification tasks
+  ansible.builtin.include_tasks: verify.yaml
+  when: ansible_os_family == "Debian"

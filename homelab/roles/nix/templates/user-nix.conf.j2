@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# User-specific Nix configuration
+
+# Enable experimental features
+experimental-features = {{ nix_experimental_features | join(' ') }}
+
+# User-specific settings
+{% if nix_user_trusted | default(false) %}
+trusted-users = {{ ansible_user }}
+{% endif %}
+
+# Build settings for user
+max-jobs = {{ nix_build_cores | default('auto') }}
+
+# User-specific substituters
+substituters = https://cache.nixos.org/ https://nix-community.cachix.org
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+
+# Keep build outputs for debugging
+keep-outputs = true
+keep-derivations = true

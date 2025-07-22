@@ -1,0 +1,195 @@
+{ config, pkgs, ... }:
+
+{
+  # Home Manager needs a bit of information about you and the paths it should manage
+  home.username = "{{ ansible_user }}";
+  home.homeDirectory = "{{ user_home_dir }}";
+
+  # This value determines the Home Manager release that your configuration is
+  # compatible with. This helps avoid breakage when a new Home Manager release
+  # introduces backwards incompatible changes.
+  home.stateVersion = "24.05"; # Please read the comment before changing.
+
+  # The home.packages option allows you to install Nix packages into your environment.
+  home.packages = with pkgs; [
+    # Development tools
+    git
+    gh
+    vim
+    neovim
+    curl
+    wget
+    htop
+    tree
+    jq
+    fzf
+    ripgrep
+    fd
+    bat
+    eza
+
+    # System utilities
+    tmux
+    screen
+    unzip
+    zip
+    rsync
+
+    # Network tools
+    nmap
+    netcat
+    dig
+
+    # Optional: homelab specific tools
+    # docker-compose
+    # kubectl
+    # terraform
+    # ansible
+  ];
+
+  # Home Manager is pretty good at managing dotfiles. The primary way to manage
+  # plain files is through 'home.file'.
+  home.file = {
+    # # Building this configuration will create a copy of 'dotfiles/screenrc' in
+    # # the Nix store. Activating the configuration will then make '~/.screenrc' a
+    # # symlink to the Nix store copy.
+    # ".screenrc".source = dotfiles/screenrc;
+
+    # # You can also set the file content immediately.
+    # ".gradle/gradle.properties".text = ''
+    #   org.gradle.console=verbose
+    #   org.gradle.daemon.idletimeout=3600000
+    # '';
+  };
+
+  # Home Manager can also manage your environment variables through
+  # 'home.sessionVariables'. These will be explicitly sourced when using a
+  # shell provided by Home Manager. If you don't want to manage your shell
+  # through Home Manager then you have to manually source these variables.
+  home.sessionVariables = {
+    EDITOR = "vim";
+    BROWSER = "firefox";
+    TERMINAL = "alacritty";
+  };
+
+  # Programs configuration
+  programs = {
+    # Let Home Manager install and manage itself
+    home-manager.enable = true;
+
+    # Git configuration
+    git = {
+      enable = true;
+      userName = "{{ ansible_user }}";
+      userEmail = "{{ ansible_user }}@{{ lookup('env', 'HOMELAB_DOMAIN') | default('localhost') }}";
+      extraConfig = {
+        init.defaultBranch = "main";
+        pull.rebase = false;
+        core.editor = "vim";
+      };
+    };
+
+    # Bash configuration
+    bash = {
+      enable = true;
+      enableCompletion = true;
+      historyControl = [ "ignoredups" "ignorespace" ];
+      historySize = 10000;
+
+      shellAliases = {
+        ll = "eza -la";
+        la = "eza -la";
+        ls = "eza";
+        grep = "rg";
+        cat = "bat";
+        find = "fd";
+        ".." = "cd ..";
+        "..." = "cd ../..";
+        hm = "home-manager";
+        hms = "home-manager switch";
+        hme = "home-manager edit";
+      };
+
+      bashrcExtra = ''
+        # Custom bash configuration
+        export PATH="$HOME/.local/bin:$PATH"
+
+        # Homelab specific aliases
+        alias k="kubectl"
+        alias tf="terraform"
+        alias ans="ansible"
+        alias ap="ansible-playbook"
+
+        # Nix helpers
+        alias nix-search="nix search nixpkgs"
+        alias nix-shell="nix shell"
+        alias nix-run="nix run"
+      '';
+    };
+
+    # Starship prompt (optional, modern shell prompt)
+    starship = {
+      enable = true;
+      settings = {
+        add_newline = false;
+        format = "$username$hostname$directory$git_branch$git_status$cmd_duration$line_break$character";
+
+        username = {
+          style_user = "bright-yellow bold";
+          style_root = "bright-red bold";
+          show_always = true;
+        };
+
+        hostname = {
+          ssh_only = false;
+          style = "bright-green bold";
+        };
+
+        directory = {
+          style = "bright-blue bold";
+          truncation_length = 3;
+        };
+
+        git_branch = {
+          style = "bright-purple bold";
+        };
+      };
+    };
+
+    # Direnv for development environments
+    direnv = {
+      enable = true;
+      nix-direnv.enable = true;
+    };
+
+    # Modern replacements for classic tools
+    eza = {
+      enable = true;
+      enableBashIntegration = true;
+      enableZshIntegration = true;
+    };
+
+    bat = {
+      enable = true;
+      config = {
+        theme = "TwoDark";
+        style = "numbers,changes,header";
+      };
+    };
+
+    fzf = {
+      enable = true;
+      enableBashIntegration = true;
+    };
+  };
+
+  # Services (optional, for user-level daemons)
+  services = {
+    # GPG agent
+    gpg-agent = {
+      enable = true;
+      defaultCacheTtl = 1800;
+      enableSshSupport = true;
+    };
+  };
+}

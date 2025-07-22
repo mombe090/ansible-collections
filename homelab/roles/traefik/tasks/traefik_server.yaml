@@ -1,0 +1,28 @@
+
+- name: Copy Traefik config files
+  ansible.builtin.template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+  become: true
+  loop:
+    - { src: '{{ role_path }}/templates/compose.yaml.j2', dest: '{{ traefik_dir }}/compose.yaml' }
+    - { src: '{{ role_path }}/templates/traefik.external.yaml.j2', dest: '{{ traefik_dir }}/config/conf.d/external-services.yml' }
+    - { src: '{{ role_path }}/templates/traefik.config.yaml.j2', dest: '{{ traefik_dir }}/traefik.yml' }
+    - { src: '{{ role_path }}/templates/authentik.config.yaml.j2', dest: '{{ traefik_dir }}/config/conf.d/authentik.middleware.yml' }
+
+
+- name: Tear down existing services
+  community.docker.docker_compose_v2:
+    project_src: '{{ traefik_dir }}'
+    state: absent
+    remove_orphans: true
+  become_user: '{{ ansible_user }}'
+
+- name: Ensure Traefik is running
+  community.docker.docker_compose_v2:
+    project_src: '{{ traefik_dir }}'
+    state: present
+  become_user: '{{ ansible_user }}'
+  environment:
+    CLOUD_FLARE_HOME_API_TOKEN: '{{ cloudflare_api_key }}'
+    TRAEFIK_DASHBOARD_CREDENTIALS: '{{ traefik_dashboard_credentials }}'

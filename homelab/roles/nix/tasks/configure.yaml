@@ -1,0 +1,56 @@
+---
+- name: Ensure Nix configuration directory exists
+  become: true
+  ansible.builtin.file:
+    path: "{{ nix_config_dir }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Create or update Nix configuration file
+  become: true
+  ansible.builtin.template:
+    src: nix.conf.j2
+    dest: "{{ nix_config_dir }}/nix.conf"
+    mode: "0644"
+    owner: root
+    group: root
+    backup: true
+  notify: restart nix-daemon
+
+- name: Ensure Nix store directory permissions
+  become: true
+  ansible.builtin.file:
+    path: /nix/store
+    state: directory
+    mode: "0555"
+    owner: root
+    group: root
+  when: nix_directory_check.stat.exists
+
+- name: Ensure Nix var directory permissions
+  become: true
+  ansible.builtin.file:
+    path: /nix/var
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: nix_directory_check.stat.exists
+
+- name: Set up Nix channels (if not using flakes exclusively)
+  become: true
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
+    nix-channel --update
+  args:
+    creates: /root/.nix-channels
+  when: not nix_flakes_enabled
+  register: nix_channel_setup
+
+- name: Display channel setup result
+  ansible.builtin.debug:
+    msg: "Nix channels configured successfully"
+  when: nix_channel_setup is defined and nix_channel_setup.changed

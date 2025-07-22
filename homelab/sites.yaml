@@ -3,7 +3,7 @@
 #- name: Install Proxmoxer
 #  hosts: pve2
 #  gather_facts: yes
-#  become: yes
+#  become: true
 #  tasks:
 #    - name: Install Proxmoxer
 #      pip:
@@ -14,7 +14,7 @@
 #- name: Install LXC
 #  hosts: pve2
 #  gather_facts: yes
-#  become: yes
+#  become: true
 #  roles:
 #    - name: lxc
 #      vars:
@@ -31,14 +31,14 @@
 #- name: Download Distribution Images
 #  hosts: proxmox
 #  gather_facts: yes
-#  become: yes
+#  become: true
 #  roles:
 #    - name: get_cloud_images_proxmox
 
 #- name: Install Docker
 #  hosts: dns
 #  gather_facts: yes
-#  become: yes
+#  become: true
 #
 #  vars:
 #    docker_users:
@@ -49,6 +49,7 @@
 #    - name: geerlingguy.pip
 #    - name: geerlingguy.docker
 
-- import_playbook: playbooks/pihole.playbook.yaml
-- import_playbook: playbooks/traefic.playbook.yaml
+#- import_playbook: playbooks/pihole.playbook.yaml
+- import_playbook: playbooks/nix.playbook.yaml
+#- import_playbook: playbooks/traefik.playbook.yaml
 #- import_playbook: playbooks/netbird.playbook.yaml

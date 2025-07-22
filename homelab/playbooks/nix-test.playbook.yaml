@@ -1,0 +1,58 @@
+---
+- name: Test Nix installation on netbird
+  hosts: netbird
+  become: true
+  gather_facts: true
+
+  vars:
+    nix_installation_method: "determinate"
+    nix_flakes_enabled: true
+    nix_user_profile_setup: true
+    nix_systemd_service: true
+
+  pre_tasks:
+    - name: Wait for any running apt processes to complete
+      ansible.builtin.shell: |
+        while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+          echo "Waiting for other apt processes to complete..."
+          sleep 5
+        done
+      changed_when: false
+      failed_when: false
+
+    - name: Ensure apt lock files are not stale
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /var/lib/dpkg/lock-frontend
+        - /var/lib/dpkg/lock
+        - /var/cache/apt/archives/lock
+      ignore_errors: true
+
+    - name: Display system information
+      ansible.builtin.debug:
+        msg: |
+          Installing Nix on: {{ inventory_hostname }}
+          OS Family: {{ ansible_os_family }}
+          Distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+          User: {{ ansible_user }}
+
+  roles:
+    - role: nix
+      tags:
+        - nix
+        - package-manager
+
+  post_tasks:
+    - name: Display final status
+      ansible.builtin.debug:
+        msg: |
+          ✅ Nix installation completed successfully on {{ inventory_hostname }}!
+
+          To test Nix:
+          1. SSH to the host: ssh {{ ansible_user }}@{{ inventory_hostname }}
+          2. Source the profile: source ~/.bashrc
+          3. Test Nix: nix --version
+          4. Try a package: nix run nixpkgs#hello

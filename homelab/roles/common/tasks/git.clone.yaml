@@ -1,7 +1,0 @@
-- name: Clone Ansible Collections Repo
-  ansible.builtin.git:
-    repo: https://github.com/mombe090/ansible-collections.git
-    version: main
-    dest: '~/ansible-collections'
-    force: true
-  become_user: '{{ ansible_user }}'

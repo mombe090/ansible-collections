@@ -1,0 +1,12 @@
+---
+- name: reload systemd
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: restart nix-daemon
+  become: true
+  ansible.builtin.systemd:
+    name: nix-daemon
+    state: restarted
+  when: ansible_service_mgr == "systemd"

@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+# Nix environment setup for all users
+
+if [ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
+
+# Add Nix to PATH if not already present
+if [[ ":$PATH:" != *":/nix/var/nix/profiles/default/bin:"* ]]; then
+    export PATH="/nix/var/nix/profiles/default/bin:$PATH"
+fi
+
+# Set up XDG directories for Nix
+export XDG_DATA_DIRS="/nix/var/nix/profiles/default/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+
+# Nix-specific environment variables
+export NIX_PROFILES="/nix/var/nix/profiles/default"
+export NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs"
+
+# Auto-completion for bash and zsh
+if [ -n "${BASH_VERSION:-}" ] && [ -f /nix/var/nix/profiles/default/etc/bash_completion.d/nix ]; then
+    . /nix/var/nix/profiles/default/etc/bash_completion.d/nix
+fi

@@ -1,46 +1,26 @@
+- name: Ensure all required folders are created
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ traefik_dir }}/config"
+    - "{{ traefik_dir }}/config/conf.d"
+    - "{{ traefik_dir }}/data/certs/"
+    - "{{ traefik_dir }}/composes"
+
 - name: Make sure docker is running
   ansible.builtin.systemd_service:
     name: docker
     state: started
-
-- name: Ensure all required folders are created
-  become: yes
-  ansible.builtin.file:
-    path: '{{ item }}'
-    state: directory
-  loop:
-    - '{{ traefik_dir }}/config'
-    - '{{ traefik_dir }}/config/conf.d'
-    - '{{ traefik_dir }}/data/certs/'
-
-- name: Copy Traefik config files
-  ansible.builtin.template:
-    src: '{{ item.src }}'
-    dest: '{{ item.dest }}'
-  become: yes
-  loop:
-    - { src: '{{ role_path }}/templates/compose.yaml.j2', dest: '{{ traefik_dir }}/compose.yaml' }
-    - { src: '{{ role_path }}/templates/traefik.external.yaml.j2', dest: '{{ traefik_dir }}/config/conf.d/external-services.yml' }
-    - { src: '{{ role_path }}/templates/traefik.config.yaml.j2', dest: '{{ traefik_dir }}/traefik.yml' }
-    - { src: '{{ role_path }}/templates/authentik.config.yaml.j2', dest: '{{ traefik_dir }}/config/conf.d/authentik.middleware.yml' }
 
 - name: Ensure proxy docker network exists
   docker_network:
     name: proxy
     state: present
 
-- name: Tear down existing services
-  community.docker.docker_compose_v2:
-    project_src: '{{ traefik_dir }}'
-    state: absent
-    remove_orphans: true
-  become_user: '{{ ansible_user }}'
+#- name: Import Traefik Server Task
+#  ansible.builtin.include_tasks: traefik_server.yaml
 
-- name: Ensure Traefik is running
-  community.docker.docker_compose_v2:
-    project_src: '{{ traefik_dir }}'
-    state: present
-  become_user: '{{ ansible_user }}'
-  environment:
-    CLOUD_FLARE_HOME_API_TOKEN: '{{ cloudflare_api_key }}'
-    TRAEFIK_DASHBOARD_CREDENTIALS: '{{ traefik_dashboard_credentials }}'
+- name: Import n8n Task
+  ansible.builtin.include_tasks: n8n.yaml

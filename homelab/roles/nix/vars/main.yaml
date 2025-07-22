@@ -1,0 +1,41 @@
+---
+# Role-specific variables (higher precedence than defaults)
+
+# Environment-specific overrides based on lookup
+homelab_user: '{{ lookup("env", "HOMELAB_USER") | default("ubuntu") }}'
+homelab_domain: '{{ lookup("env", "HOMELAB_DOMAIN") | default("home.local") }}'
+
+# Nix installation method preferences by environment
+nix_installation_preferences:
+  production: "determinate"
+  development: "upstream"
+  testing: "native"
+
+# Current environment selection (can be overridden)
+nix_environment: "{{ lookup('env', 'NIX_ENVIRONMENT') | default('production') }}"
+
+# Dynamic installation method based on environment
+nix_installation_method: "{{ nix_installation_preferences[nix_environment] | default('determinate') }}"
+
+# User-specific configuration
+nix_user_config_dir: "/home/{{ homelab_user }}/.config/nix"
+nix_user_profile_dir: "/home/{{ homelab_user }}/.nix-profile"
+
+# Security configuration for homelab environment
+nix_trusted_users:
+  - root
+  - "@wheel"
+  - "{{ homelab_user }}"
+
+# Performance optimizations for homelab
+nix_build_cores: "{{ ansible_processor_vcpus | default(2) }}"
+nix_max_jobs: "{{ (ansible_processor_vcpus | default(2) | int / 2) | int | string }}"
+
+# Development-specific packages to be available globally
+nix_global_packages:
+  - git
+  - vim
+  - curl
+  - wget
+  - htop
+  - tree

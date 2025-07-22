@@ -1,0 +1,53 @@
+---
+- name: Update apt cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install required packages for Nix installation
+  become: true
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - systemd
+      - sudo
+      - xz-utils
+      - git
+      - build-essential
+    state: present
+    update_cache: false
+  when: ansible_os_family == "Debian"
+
+- name: Check if systemd is available
+  ansible.builtin.command: systemctl --version
+  register: systemd_check
+  changed_when: false
+  failed_when: systemd_check.rc != 0
+  when: ansible_os_family == "Debian"
+
+- name: Display systemd version
+  ansible.builtin.debug:
+    msg: "Systemd is available: {{ systemd_check.stdout_lines[0] | default('Unknown version') }}"
+  when: ansible_os_family == "Debian" and systemd_check.rc == 0
+
+- name: Check if /nix directory already exists
+  ansible.builtin.stat:
+    path: /nix
+  register: nix_directory_check
+
+- name: Check if Nix is already installed
+  ansible.builtin.shell: |
+    command -v nix
+  register: nix_command_check
+  failed_when: false
+  changed_when: false
+
+- name: Set Nix installation status fact
+  ansible.builtin.set_fact:
+    nix_already_installed: "{{ nix_command_check.rc == 0 }}"

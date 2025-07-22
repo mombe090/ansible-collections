@@ -26,3 +26,4 @@
           - dns2.{{ domain }},{{ proxy_host }}
           - pve.{{ domain }},{{ proxy_host }}
           - pve2.{{ domain }},{{ proxy_host }}
+          - n8n.{{ domain }},{{ proxy_host }}

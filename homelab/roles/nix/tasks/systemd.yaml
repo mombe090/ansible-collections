@@ -1,0 +1,50 @@
+---
+- name: Check if Nix daemon systemd service exists
+  become: true
+  ansible.builtin.stat:
+    path: /etc/systemd/system/nix-daemon.service
+  register: nix_daemon_service_check
+
+- name: Enable and start Nix daemon service
+  become: true
+  ansible.builtin.systemd:
+    name: nix-daemon
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: nix_daemon_service_check.stat.exists
+
+- name: Check Nix daemon service status
+  become: true
+  ansible.builtin.systemd:
+    name: nix-daemon
+  register: nix_daemon_status
+  when: nix_daemon_service_check.stat.exists
+
+- name: Display Nix daemon status
+  ansible.builtin.debug:
+    msg: "Nix daemon is {{ nix_daemon_status.status.ActiveState | default('unknown') }}"
+  when: nix_daemon_status is defined
+
+- name: Create systemd override directory for Nix daemon
+  become: true
+  ansible.builtin.file:
+    path: /etc/systemd/system/nix-daemon.service.d
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: nix_daemon_service_check.stat.exists
+
+- name: Configure Nix daemon systemd overrides
+  become: true
+  ansible.builtin.template:
+    src: nix-daemon-override.conf.j2
+    dest: /etc/systemd/system/nix-daemon.service.d/override.conf
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - reload systemd
+    - restart nix-daemon
+  when: nix_daemon_service_check.stat.exists

@@ -1,0 +1,29 @@
+# {{ ansible_managed }}
+# Nix configuration file
+
+# Build settings
+max-jobs = auto
+cores = 0
+
+# Store settings
+auto-optimise-store = true
+{% if nix_flakes_enabled %}
+experimental-features = nix-command flakes
+{% endif %}
+
+# Security settings
+trusted-users = root @wheel
+allowed-users = *
+
+# Substituters and binary caches
+substituters = https://cache.nixos.org/
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+
+# Build settings
+sandbox = true
+require-sigs = true
+
+# Additional configuration
+{% for config_line in nix_extra_config %}
+{{ config_line }}
+{% endfor %}

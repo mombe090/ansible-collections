@@ -1,0 +1,92 @@
+---
+- name: Install Nix using Determinate installer
+  block:
+    - name: Download and run Determinate Nix installer
+      become: true
+      ansible.builtin.shell: |
+        curl --proto '=https' --tlsv1.2 -sSf -L {{ nix_installer_url }} | \
+        sh -s -- install linux \
+          --extra-conf "auto-optimise-store = true" \
+          --extra-conf "experimental-features = nix-command flakes" \
+          --extra-conf "max-jobs = auto" \
+          --extra-conf "trusted-users = root @wheel" \
+          --nix-build-group-name {{ nix_build_group_name }} \
+          --nix-build-group-id {{ nix_build_group_id }} \
+          --nix-build-user-count {{ nix_build_user_count }} \
+          --nix-build-user-prefix {{ nix_build_user_prefix }} \
+          --nix-build-user-id-base {{ nix_build_user_id_base }} \
+          {% if nix_no_confirm %}--no-confirm{% endif %} \
+          {% if not nix_daemon_start %}--no-start-daemon{% endif %} \
+          {% if nix_installation_method == "determinate" %}--determinate{% endif %}
+      args:
+        creates: "{{ nix_receipt_path }}"
+      when: not nix_already_installed
+      register: nix_install_result
+
+    - name: Display installation result
+      ansible.builtin.debug:
+        msg: "Nix installation completed successfully"
+      when: nix_install_result is defined and nix_install_result.rc == 0
+
+  when: nix_installation_method == "determinate" and not nix_already_installed
+
+- name: Install Nix using upstream installer (fallback)
+  block:
+    - name: Download and run upstream Nix installer
+      become: true
+      ansible.builtin.shell: |
+        curl -L {{ nix_upstream_url }} | sh -s -- --daemon
+      args:
+        creates: /nix/var/nix/profiles/default
+      when: not nix_already_installed
+      register: nix_upstream_install_result
+
+    - name: Display upstream installation result
+      ansible.builtin.debug:
+        msg: "Upstream Nix installation completed successfully"
+      when: nix_upstream_install_result is defined and nix_upstream_install_result.rc == 0
+
+  when: nix_installation_method == "upstream" and not nix_already_installed
+
+- name: Install Nix using native package (experimental)
+  block:
+    - name: Get system architecture
+      ansible.builtin.shell: dpkg --print-architecture
+      register: system_arch
+      changed_when: false
+
+    - name: Download Nix .deb package
+      become: true
+      ansible.builtin.get_url:
+        url: "{{ nix_native_package_url }}/nix/{{ system_arch.stdout }}/nix-multi-user-2.24.10.deb"
+        dest: /tmp/nix-multi-user.deb
+        mode: "0644"
+      when: not nix_already_installed
+
+    - name: Install Nix .deb package
+      become: true
+      ansible.builtin.apt:
+        deb: /tmp/nix-multi-user.deb
+        state: present
+      when: not nix_already_installed
+      register: nix_native_install_result
+
+    - name: Clean up downloaded package
+      become: true
+      ansible.builtin.file:
+        path: /tmp/nix-multi-user.deb
+        state: absent
+
+    - name: Display native installation result
+      ansible.builtin.debug:
+        msg: "Native Nix package installation completed successfully"
+      when: nix_native_install_result is defined and nix_native_install_result.changed
+
+  when: nix_installation_method == "native" and not nix_already_installed
+
+- name: Verify Nix installation
+  ansible.builtin.shell: |
+    test -d /nix && test -f /nix/var/nix/profiles/default/bin/nix
+  register: nix_verify_install
+  failed_when: nix_verify_install.rc != 0
+  changed_when: false

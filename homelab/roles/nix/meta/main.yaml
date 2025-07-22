@@ -1,0 +1,25 @@
+---
+dependencies:
+  - role: geerlingguy.docker
+    when: ansible_os_family == "Debian"
+galaxy_info:
+  author: homelab
+  description: Install and configure Nix package manager on Ubuntu/Debian systems
+  company: MombeSoft
+  license: MIT
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - nix
+    - package-manager
+    - development
+    - homelab

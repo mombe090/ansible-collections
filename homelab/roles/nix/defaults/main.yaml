@@ -1,0 +1,68 @@
+---
+# Nix installation configuration defaults
+nix_installation_method: "determinate" # "determinate", "upstream", or "native"
+nix_user_profile_setup: true
+nix_systemd_service: true
+nix_flakes_enabled: true
+nix_experimental_features:
+  - "nix-command"
+  - "flakes"
+
+# Home Manager configuration
+nix_home_manager_enabled: true
+nix_home_manager_channel: "release-24.05" # or "master" for latest
+nix_home_manager_flake_enabled: true
+
+# Determinate Nix specific settings
+nix_determinate_version: "latest"
+nix_installer_url: "https://install.determinate.systems/nix"
+nix_no_confirm: true
+nix_daemon_start: true
+
+# Upstream Nix settings (fallback)
+nix_upstream_url: "https://nixos.org/nix/install"
+
+# Native package installation (for supported distributions)
+nix_native_package_url: "https://nix-community.github.io/nix-installers"
+
+# Nix configuration options
+nix_extra_config:
+  - "auto-optimise-store = true"
+  - "experimental-features = nix-command flakes"
+  - "max-jobs = auto"
+  - "trusted-users = root @wheel"
+  - "accept-flake-config = true"
+  - "warn-dirty = false"
+
+# Flakes and Home Manager specific configuration
+nix_flake_registry:
+  nixpkgs: "github:NixOS/nixpkgs/nixos-unstable"
+  home-manager: "github:nix-community/home-manager"
+  nixpkgs-stable: "github:NixOS/nixpkgs/nixos-24.05"
+
+# Build users configuration
+nix_build_group_name: "nixbld"
+nix_build_group_id: 30000
+nix_build_user_count: 32
+nix_build_user_prefix: "nixbld"
+nix_build_user_id_base: 30000
+
+# Installation paths
+nix_profile_dir: "/nix/var/nix/profiles/default"
+nix_config_dir: "/etc/nix"
+nix_receipt_path: "/nix/receipt.json"
+
+# Optional features
+nix_enable_gc_timer: false # Enable automatic garbage collection
+nix_user_trusted: false # Make user a trusted user
+nix_install_global_packages: false # Install global development packages
+
+# Development packages to install globally (if enabled)
+nix_global_packages:
+  - git
+  - vim
+  - curl
+  - wget
+  - htop
+  - tree
+  - jq

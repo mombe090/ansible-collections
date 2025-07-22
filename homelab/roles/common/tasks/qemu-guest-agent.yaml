@@ -1,0 +1,23 @@
+- name: Install guest qemu-guest-agent
+  become: true
+  ansible.builtin.dnf:
+    name: qemu-guest-agent
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'RedHat' and initialization == true
+
+- name: Install guest qemu-guest-agent
+  become: true
+  ansible.builtin.apt:
+    name: qemu-guest-agent
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'Debian' and initialization == true
+
+- name: start guest qemu-guest-agent
+  become: true
+  ansible.builtin.service:
+    name: qemu-guest-agent
+    state: started
+    enabled: yes
+  when: ansible_os_family in ['RedHat', 'Debian'] and initialization == true

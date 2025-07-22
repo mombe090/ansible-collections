@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+# Systemd override configuration for Nix daemon
+
+[Unit]
+Description=Nix Multi-User Daemon
+After=network.target local-fs.target
+
+[Service]
+ExecStart=
+ExecStart=/nix/var/nix/profiles/default/bin/nix-daemon --daemon
+KillMode=process
+LimitNOFILE=1048576
+RestartSec=5
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

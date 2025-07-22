@@ -1,0 +1,86 @@
+---
+# Optional post-installation tasks for Nix
+
+- name: Install home-manager globally
+  become: false
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    export NIX_CONFIG="experimental-features = nix-command flakes"
+    nix profile install nixpkgs#home-manager
+  register: home_manager_global_install
+  failed_when: false
+  changed_when: home_manager_global_install.rc == 0
+  tags:
+    - home-manager
+
+- name: Set up Nix registry for flakes
+  become: false
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    nix registry add {{ item.key }} {{ item.value }}
+  loop: "{{ nix_flake_registry | dict2items }}"
+  register: nix_registry_setup
+  failed_when: false
+  changed_when: nix_registry_setup.rc == 0
+  when: nix_flakes_enabled
+
+- name: Create user Nix configuration directory
+  become: false
+  ansible.builtin.file:
+    path: "{{ nix_user_config_dir }}"
+    state: directory
+    mode: "0755"
+  when: nix_user_config_dir is defined
+
+- name: Set up user-specific Nix configuration
+  become: false
+  ansible.builtin.template:
+    src: user-nix.conf.j2
+    dest: "{{ nix_user_config_dir }}/nix.conf"
+    mode: "0644"
+  when: nix_user_config_dir is defined
+
+- name: Configure Nix garbage collection timer (optional)
+  become: true
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Nix Garbage Collection
+
+      [Timer]
+      OnCalendar=weekly
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+    dest: /etc/systemd/system/nix-gc.timer
+    mode: "0644"
+  notify:
+    - reload systemd
+  when: nix_enable_gc_timer | default(false)
+
+- name: Configure Nix garbage collection service
+  become: true
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Nix Garbage Collection
+
+      [Service]
+      Type=oneshot
+      ExecStart=/nix/var/nix/profiles/default/bin/nix-collect-garbage -d
+      User=root
+    dest: /etc/systemd/system/nix-gc.service
+    mode: "0644"
+  notify:
+    - reload systemd
+  when: nix_enable_gc_timer | default(false)
+
+- name: Enable Nix garbage collection timer
+  become: true
+  ansible.builtin.systemd:
+    name: nix-gc.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: nix_enable_gc_timer | default(false)

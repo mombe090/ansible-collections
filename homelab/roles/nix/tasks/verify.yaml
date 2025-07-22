@@ -1,0 +1,122 @@
+---
+- name: Test Nix command availability
+  become: false
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    nix --version
+  register: nix_version_check
+  changed_when: false
+
+- name: Display Nix version
+  ansible.builtin.debug:
+    msg: "Nix version: {{ nix_version_check.stdout }}"
+  when: nix_version_check.rc == 0
+
+- name: Test Nix flakes functionality (if enabled)
+  become: false
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    nix flake --help
+  register: nix_flakes_check
+  changed_when: false
+  failed_when: false
+  when: nix_flakes_enabled
+
+- name: Display flakes status
+  ansible.builtin.debug:
+    msg: "Nix flakes are {{ 'available' if nix_flakes_check.rc == 0 else 'not available' }}"
+  when: nix_flakes_enabled and nix_flakes_check is defined
+
+- name: Test basic Nix package installation
+  become: false
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    nix-env -iA nixpkgs.hello --dry-run
+  register: nix_package_test
+  changed_when: false
+  failed_when: false
+
+- name: Display package installation test result
+  ansible.builtin.debug:
+    msg: "Nix package installation test: {{ 'passed' if nix_package_test.rc == 0 else 'failed' }}"
+  when: nix_package_test is defined
+
+- name: Test Nix store permissions
+  become: true
+  ansible.builtin.shell: |
+    test -r /nix/store && test -d /nix/store
+  register: nix_store_permissions
+  changed_when: false
+  failed_when: false
+
+- name: Display store permissions check
+  ansible.builtin.debug:
+    msg: "Nix store permissions: {{ 'correct' if nix_store_permissions.rc == 0 else 'incorrect' }}"
+
+- name: Verify Nix daemon is running
+  become: true
+  ansible.builtin.systemd:
+    name: nix-daemon
+  register: nix_daemon_verify
+  when: nix_systemd_service
+
+- name: Display daemon status
+  ansible.builtin.debug:
+    msg: "Nix daemon status: {{ nix_daemon_verify.status.ActiveState | default('unknown') }}"
+  when: nix_daemon_verify is defined
+
+- name: Test Home Manager availability (if enabled)
+  become: false
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    command -v home-manager
+  register: home_manager_test
+  changed_when: false
+  failed_when: false
+  when: nix_home_manager_enabled
+
+- name: Display Home Manager status
+  ansible.builtin.debug:
+    msg: "Home Manager: {{ 'available' if home_manager_test.rc == 0 else 'not available' }}"
+  when: nix_home_manager_enabled and home_manager_test is defined
+
+- name: Test Nix flakes registry
+  become: false
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    nix registry list
+  register: nix_registry_test
+  changed_when: false
+  failed_when: false
+  when: nix_flakes_enabled
+
+- name: Display registry status
+  ansible.builtin.debug:
+    msg: "Nix registry configured: {{ 'yes' if nix_registry_test.rc == 0 else 'no' }}"
+  when: nix_flakes_enabled and nix_registry_test is defined
+
+- name: Final installation summary
+  ansible.builtin.debug:
+    msg: |
+      🎉 Nix installation completed successfully!
+
+      Configuration Summary:
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      📦 Nix Version: {{ nix_version_check.stdout | default('unknown') }}
+      🔧 Installation Method: {{ nix_installation_method }}
+      ⚡ Flakes Enabled: {{ nix_flakes_enabled }}
+      🏠 Home Manager: {{ nix_home_manager_enabled }}
+      🔧 Systemd Service: {{ nix_systemd_service }}
+      👤 User Profile Setup: {{ nix_user_profile_setup }}
+
+      🚀 Quick Start:
+      {% if nix_home_manager_enabled %}
+      • Edit packages: vim ~/.config/home-manager/home.nix
+      • Apply changes: hms (alias for home-manager switch)
+      • Use flakes: nix run nixpkgs#<package>
+      {% else %}
+      • Install packages: nix-env -iA nixpkgs.<package>
+      • Use flakes: nix run nixpkgs#<package>
+      {% endif %}
+
+      📚 Learn more: https://nix.dev/
