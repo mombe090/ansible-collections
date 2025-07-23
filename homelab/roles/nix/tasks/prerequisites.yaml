@@ -20,6 +20,8 @@
       - xz-utils
       - git
       - build-essential
+      - stow
+      - gh
     state: present
     update_cache: false
   when: ansible_os_family == "Debian"

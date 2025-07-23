@@ -29,10 +29,6 @@
   ansible.builtin.include_tasks: systemd.yaml
   when: ansible_os_family == "Debian" and nix_systemd_service
 
-- name: Include user profile setup tasks
-  ansible.builtin.include_tasks: user_profile.yaml
-  when: ansible_os_family == "Debian" and nix_user_profile_setup
-
 - name: Include dotfiles setup tasks
   ansible.builtin.include_tasks: dotfiles.yaml
   when: ansible_os_family == "Debian"
