@@ -33,10 +33,6 @@
   ansible.builtin.include_tasks: dotfiles.yaml
   when: ansible_os_family == "Debian"
 
-- name: Include home-manager setup tasks
-  ansible.builtin.include_tasks: home_manager.yaml
-  when: ansible_os_family == "Debian" and nix_home_manager_enabled
-
 - name: Include post-installation tasks
   ansible.builtin.include_tasks: post_install.yaml
   when: ansible_os_family == "Debian"

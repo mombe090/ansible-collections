@@ -28,8 +28,7 @@
     else
       echo 'Dotfiles directory already exists, pulling latest changes...'
       cd {{ user_home_dir }}/dotfiles
-      git checkout homemanager
-      git pull origin homemanager
+      gh repo sync
     fi
   register: dotfiles_setup
   failed_when: false
@@ -42,7 +41,7 @@
 - name: Setup dotfiles with stow
   become: false
   ansible.builtin.shell: |
-    cd ~/dotfiles && git checkout homemanager && stow .
+    cd ~/dotfiles && git checkout main && stow .
   register: stow_setup
   failed_when: false
   when:

@@ -17,6 +17,9 @@ nix_home_manager_flake_enabled: true
 nix_machine_type: "linux-x86_64" # Options: linux-x86_64, linux-aarch64, darwin-x86_64, darwin-aarch64
 nix_home_manager_user: "{{ ansible_user }}" # User for Home Manager configuration
 
+# Dotfiles configuration
+dotfiles_branch: "main" # Default branch to checkout for dotfiles repository
+
 # Determinate Nix specific settings
 nix_determinate_version: "latest"
 nix_installer_url: "https://install.determinate.systems/nix"
