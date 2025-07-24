@@ -76,6 +76,7 @@
 - name: Apply dotfiles Home Manager configuration (if exists)
   become: false
   ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
     export NIX_CONFIG="experimental-features = nix-command flakes"
     cd ~/dotfiles/.config/nix && nix run home-manager/{{ nix_home_manager_channel }} -- switch --flake .#{{ nix_home_manager_user }}@{{ nix_machine_type }} -b backup
   register: dotfiles_home_manager_switch
