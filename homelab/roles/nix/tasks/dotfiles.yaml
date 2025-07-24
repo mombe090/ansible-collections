@@ -28,7 +28,14 @@
     else
       echo 'Dotfiles directory already exists, pulling latest changes...'
       cd {{ user_home_dir }}/dotfiles
-      gh repo sync
+      if [ -n "$(git status --porcelain)" ]; then
+        echo 'Stashing local changes before sync...'
+        git stash --all
+        gh repo sync --force
+        echo 'Local changes have been stashed. Use "git stash list" and "git stash pop" to recover.'
+      else
+        gh repo sync --force
+      fi
     fi
   register: dotfiles_setup
   failed_when: false
@@ -58,8 +65,8 @@
       📁 Dotfiles Management:
       {% if github_token | length > 0 %}
       ✅ GitHub Token: Available
-      {% if dotfiles_setup is defined and dotfiles_setup.rc == 0 %}✅ Dotfiles: Tools installed and repository cloned successfully{% elif dotfiles_setup is defined %}❌ Dotfiles: Setup failed - {{ dotfiles_setup.stderr | default('Unknown error') }}{% else %}⚠️ Dotfiles: Setup was skipped{% endif %}
-      {% if stow_setup is defined and stow_setup.rc == 0 %}✅ Stow: Applied dotfiles successfully{% elif stow_setup is defined %}❌ Stow: Setup failed - {{ stow_setup.stderr | default('Unknown error') }}{% else %}⚠️ Stow: Setup was skipped{% endif %}
+      {% if dotfiles_setup is defined and (dotfiles_setup.rc is defined and dotfiles_setup.rc == 0) %}✅ Dotfiles: Tools installed and repository cloned successfully{% elif dotfiles_setup is defined %}❌ Dotfiles: Setup failed - {{ dotfiles_setup.stderr | default('Unknown error') }}{% else %}⚠️ Dotfiles: Setup was skipped{% endif %}
+      {% if stow_setup is defined and (stow_setup.rc is defined and stow_setup.rc == 0) %}✅ Stow: Applied dotfiles successfully{% elif stow_setup is defined %}❌ Stow: Setup failed - {{ stow_setup.stderr | default('Unknown error') }}{% else %}⚠️ Stow: Setup was skipped{% endif %}
       {% else %}
       ⚠️  GitHub Token: Not provided
       💡 Set HOMELAB_GITHUB_TOKEN or GITHUB_TOKEN environment variable to enable dotfiles management
