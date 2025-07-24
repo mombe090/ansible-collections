@@ -13,6 +13,10 @@ nix_home_manager_enabled: true
 nix_home_manager_channel: "release-24.05" # or "master" for latest
 nix_home_manager_flake_enabled: true
 
+# Machine type configuration for Home Manager flakes
+nix_machine_type: "linux-x86_64" # Options: linux-x86_64, linux-aarch64, darwin-x86_64, darwin-aarch64
+nix_home_manager_user: "{{ ansible_user }}" # User for Home Manager configuration
+
 # Determinate Nix specific settings
 nix_determinate_version: "latest"
 nix_installer_url: "https://install.determinate.systems/nix"

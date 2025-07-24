@@ -87,12 +87,12 @@
           {% if nix_home_manager_config_exists | default(false) %}
           ✅ Your dotfiles have been applied successfully
           - Configuration: ~/.config/home-manager/home.nix (from your dotfiles)
-          - Apply changes: cd ~/.config/home-manager && home-manager switch
+          - Apply changes: cd ~/.config/home-manager && nix run home-manager/release-24.05 -- switch --flake .#{{ nix_home_manager_user }}@{{ nix_machine_type }}
           {% else %}
           ⚠️  No existing dotfiles found
           - Default configuration created at: ~/.config/home-manager/home.nix
           - Edit: vim ~/.config/home-manager/home.nix
-          - Apply: cd ~/.config/home-manager && home-manager switch
+          - Apply: cd ~/.config/home-manager && nix run home-manager/release-24.05 -- switch --flake .#{{ nix_home_manager_user }}@{{ nix_machine_type }}
           {% endif %}
 
           🔍 Nix Flakes (modern package management):

@@ -69,7 +69,8 @@
   become: false
   ansible.builtin.shell: |
     . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-    command -v home-manager
+    export NIX_CONFIG="experimental-features = nix-command flakes"
+    nix run home-manager/{{ nix_home_manager_channel }} -- --version
   register: home_manager_test
   changed_when: false
   failed_when: false
@@ -77,7 +78,7 @@
 
 - name: Display Home Manager status
   ansible.builtin.debug:
-    msg: "Home Manager: {{ 'available' if home_manager_test.rc == 0 else 'not available' }}"
+    msg: "Home Manager: {{ 'available via nix run' if home_manager_test.rc == 0 else 'not available' }}"
   when: nix_home_manager_enabled and home_manager_test is defined
 
 - name: Test Nix flakes registry
@@ -112,7 +113,7 @@
       🚀 Quick Start:
       {% if nix_home_manager_enabled %}
       • Edit packages: vim ~/.config/home-manager/home.nix
-      • Apply changes: hms (alias for home-manager switch)
+      • Apply changes: cd ~/.config/home-manager && nix run home-manager/{{ nix_home_manager_channel }} -- switch --flake .#{{ nix_home_manager_user }}@{{ nix_machine_type }}
       • Use flakes: nix run nixpkgs#<package>
       {% else %}
       • Install packages: nix-env -iA nixpkgs.<package>

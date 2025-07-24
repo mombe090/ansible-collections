@@ -10,8 +10,8 @@
   };
 
   outputs = { nixpkgs, home-manager, ... }: {
-    homeConfigurations."{{ ansible_user }}" = home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    homeConfigurations."{{ nix_home_manager_user }}@{{ nix_machine_type }}" = home-manager.lib.homeManagerConfiguration {
+      pkgs = nixpkgs.legacyPackages.{{ nix_machine_type | replace('-', '_') }};
 
       modules = [
         ./home.nix

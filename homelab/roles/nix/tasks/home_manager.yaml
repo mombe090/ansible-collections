@@ -1,18 +1,19 @@
 ---
 # Home Manager setup tasks
 
-- name: Check if Home Manager is already installed
+- name: Check if Home Manager configuration exists
   become: false
   ansible.builtin.shell: |
     . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-    command -v home-manager
+    export NIX_CONFIG="experimental-features = nix-command flakes"
+    nix run home-manager/{{ nix_home_manager_channel }} -- --version
   register: home_manager_check
   failed_when: false
   changed_when: false
 
 - name: Set Home Manager installation status
   ansible.builtin.set_fact:
-    home_manager_installed: "{{ home_manager_check.rc == 0 }}"
+    home_manager_available: "{{ home_manager_check.rc == 0 }}"
 
 - name: Install Home Manager via flakes (recommended)
   become: false
@@ -28,7 +29,7 @@
         nix run home-manager/{{ nix_home_manager_channel }} -- init --switch
       register: home_manager_install
       changed_when: home_manager_install.rc == 0
-      when: not home_manager_installed and not nix_home_manager_flake_enabled
+      when: not home_manager_available and not nix_home_manager_flake_enabled
 
     - name: Create Home Manager flake.nix
       ansible.builtin.template:
@@ -55,27 +56,13 @@
         . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
         export NIX_CONFIG="experimental-features = nix-command flakes"
         cd {{ user_home_dir }}/.config/home-manager
-        # Use the globally installed home-manager command
-        home-manager switch --flake .#{{ ansible_user }} -b backup
+        # Use nix run instead of globally installed home-manager
+        nix run home-manager/{{ nix_home_manager_channel }} -- switch --flake .#{{ nix_home_manager_user }}@{{ nix_machine_type }} -b backup
       register: home_manager_flake_init
       failed_when: false
       changed_when: home_manager_flake_init.rc == 0
       when: nix_home_manager_flake_enabled
 
-  when: nix_home_manager_enabled and not home_manager_installed
-
-- name: Set up Home Manager shell integration
-  become: false
-  ansible.builtin.blockinfile:
-    path: "{{ user_home_dir }}/.bashrc"
-    block: |
-      # Home Manager integration
-      if [ -e {{ user_home_dir }}/.nix-profile/etc/profile.d/hm-session-vars.sh ]; then
-        . {{ user_home_dir }}/.nix-profile/etc/profile.d/hm-session-vars.sh
-      fi
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - Home Manager"
-    create: true
-    mode: "0644"
   when: nix_home_manager_enabled
 
 - name: Configure Nix flake registry
@@ -97,8 +84,10 @@
       Configuration location: {{ user_home_dir }}/.config/home-manager/
       {% if nix_home_manager_flake_enabled %}
       Using flakes: Yes
+      Machine Type: {{ nix_machine_type }}
+      User: {{ nix_home_manager_user }}
       To manage packages: Edit {{ user_home_dir }}/.config/home-manager/home.nix
-      To apply changes: home-manager switch --flake ~/.config/home-manager#{{ ansible_user }}
+      To apply changes: nix run home-manager/{{ nix_home_manager_channel }} -- switch --flake ~/.config/home-manager#{{ nix_home_manager_user }}@{{ nix_machine_type }}
       {% else %}
       Using traditional: Yes
       To manage packages: home-manager edit

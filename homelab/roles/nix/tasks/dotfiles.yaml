@@ -6,76 +6,49 @@
     github_token: "{{ lookup('env', 'HOMELAB_GITHUB_TOKEN') | default(lookup('env', 'GITHUB_TOKEN')) }}"
   no_log: true
 
-- name: Install temporary tools and clone dotfiles repository
+- name: Clone and setup dotfiles repository
   become: false
   ansible.builtin.shell: |
-    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    # Authenticate with GitHub using existing gh installation
+    echo 'Authenticating with GitHub...'
+    echo '{{ github_token }}' | gh auth login --with-token
 
-    # Install temporary tools using nix shell (modern approach)
-    echo "Installing temporary tools..."
-    export NIX_CONFIG="experimental-features = nix-command flakes"
+    # Check authentication status
+    gh auth status
 
-    # Verify we can use nix commands
-    nix --version
+    # Get the authenticated user's username
+    GITHUB_USER=$(gh api user --jq '.login')
+    echo "GitHub user: $GITHUB_USER"
 
-    # Install tools temporarily and clone in one session
-    nix shell nixpkgs#gh nixpkgs#stow nixpkgs#git --command bash -c "
-      # Verify tools are available
-      which gh && gh --version
-      which stow && stow --version
-      which git && git --version
-
-      {% if github_token | length > 0 %}
-      # Authenticate with GitHub
-      echo 'Authenticating with GitHub...'
-      echo '{{ github_token }}' | gh auth login --with-token
-
-      # Clone dotfiles repository
-      echo 'Cloning dotfiles repository...'
+    # Clone dotfiles repository if it doesn't exist
+    if [ ! -d {{ user_home_dir }}/dotfiles ]; then
+      echo "Cloning dotfiles repository for user: $GITHUB_USER"
       cd {{ user_home_dir }}
-      if [ -d 'dotfiles' ]; then
-          rm -rf dotfiles
-      fi
-      gh repo clone {{ ansible_user }}/dotfiles
-
-      echo 'Dotfiles cloned successfully!'
-      {% else %}
-      echo 'No GitHub token provided'
-      exit 1
-      {% endif %}
-    "
+      gh repo clone $GITHUB_USER/dotfiles
+    else
+      echo 'Dotfiles directory already exists, pulling latest changes...'
+      cd {{ user_home_dir }}/dotfiles
+      git checkout homemanager
+      git pull origin homemanager
+    fi
   register: dotfiles_setup
-  failed_when: dotfiles_setup.rc != 0
+  failed_when: false
   changed_when: dotfiles_setup.rc == 0
   when: github_token | length > 0
   tags:
     - dotfiles
-
-- name: Check what dotfiles directories are available
-  become: false
-  ansible.builtin.find:
-    paths: "{{ user_home_dir }}/dotfiles"
-    file_type: directory
-    depth: 1
-  register: dotfiles_dirs
-  when: dotfiles_setup.rc == 0
-  tags:
-    - dotfiles
+    - github
 
 - name: Setup dotfiles with stow
   become: false
   ansible.builtin.shell: |
-    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-    export NIX_CONFIG="experimental-features = nix-command flakes"
-    nix shell nixpkgs#stow --command bash -c "
-      cd {{ user_home_dir }}/dotfiles
-      stow -v --target={{ user_home_dir }} {{ item.path | basename }}
-    "
-  loop: "{{ dotfiles_dirs.files }}"
+    cd ~/dotfiles && git checkout homemanager && stow .
   register: stow_setup
   failed_when: false
-  changed_when: "'LINK' in stow_setup.stderr"
-  when: dotfiles_setup.rc == 0 and dotfiles_dirs.files | length > 0
+  when:
+    - github_token | length > 0
+    - dotfiles_setup is defined
+    - dotfiles_setup.rc == 0
   tags:
     - dotfiles
     - stow
@@ -86,13 +59,13 @@
       📁 Dotfiles Management:
       {% if github_token | length > 0 %}
       ✅ GitHub Token: Available
-      {% if dotfiles_setup.rc == 0 %}✅ Dotfiles: Tools installed and repository cloned successfully{% else %}❌ Dotfiles: Setup failed - {{ dotfiles_setup.stderr | default('Unknown error') }}{% endif %}
-      {% if stow_setup is succeeded %}✅ Stow: Applied dotfiles successfully{% else %}❌ Stow: Setup failed{% endif %}
-      📦 Available dotfiles: {{ dotfiles_dirs.files | map(attribute='path') | map('basename') | list | join(', ') if dotfiles_dirs.files is defined else 'None found' }}
+      {% if dotfiles_setup is defined and dotfiles_setup.rc == 0 %}✅ Dotfiles: Tools installed and repository cloned successfully{% elif dotfiles_setup is defined %}❌ Dotfiles: Setup failed - {{ dotfiles_setup.stderr | default('Unknown error') }}{% else %}⚠️ Dotfiles: Setup was skipped{% endif %}
+      {% if stow_setup is defined and stow_setup.rc == 0 %}✅ Stow: Applied dotfiles successfully{% elif stow_setup is defined %}❌ Stow: Setup failed - {{ stow_setup.stderr | default('Unknown error') }}{% else %}⚠️ Stow: Setup was skipped{% endif %}
       {% else %}
       ⚠️  GitHub Token: Not provided
       💡 Set HOMELAB_GITHUB_TOKEN or GITHUB_TOKEN environment variable to enable dotfiles management
       💡 Example: export HOMELAB_GITHUB_TOKEN="your_token_here"
+      💡 Manual setup: Clone your dotfiles to ~/dotfiles and run this playbook again
       {% endif %}
 
 - name: Check if home-manager config exists in dotfiles

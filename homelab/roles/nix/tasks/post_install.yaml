@@ -1,18 +1,6 @@
 ---
 # Optional post-installation tasks for Nix
 
-- name: Install home-manager globally
-  become: false
-  ansible.builtin.shell: |
-    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-    export NIX_CONFIG="experimental-features = nix-command flakes"
-    nix profile install nixpkgs#home-manager
-  register: home_manager_global_install
-  failed_when: false
-  changed_when: home_manager_global_install.rc == 0
-  tags:
-    - home-manager
-
 - name: Set up Nix registry for flakes
   become: false
   ansible.builtin.shell: |
@@ -84,3 +72,70 @@
     state: started
     daemon_reload: true
   when: nix_enable_gc_timer | default(false)
+
+- name: Apply dotfiles Home Manager configuration (if exists)
+  become: false
+  ansible.builtin.shell: |
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    export NIX_CONFIG="experimental-features = nix-command flakes"
+    cd ~/dotfiles/.config/nix && nix run home-manager/master -- switch --flake .#{{ nix_home_manager_user }}@{{ nix_machine_type }} -b backup
+  register: dotfiles_home_manager_switch
+  failed_when: false
+  changed_when: dotfiles_home_manager_switch.rc == 0
+  when:
+    - nix_home_manager_config_exists | default(false)
+    - nix_home_manager_enabled
+  tags:
+    - dotfiles
+    - home-manager
+
+- name: Display dotfiles Home Manager switch result
+  ansible.builtin.debug:
+    msg: |
+      🏠 Dotfiles Home Manager Configuration:
+      {% if dotfiles_home_manager_switch is defined and dotfiles_home_manager_switch.rc is defined %}
+      {% if dotfiles_home_manager_switch.rc == 0 %}
+      ✅ Successfully applied dotfiles Home Manager configuration
+      Machine Type: {{ nix_machine_type }}
+      User: {{ nix_home_manager_user }}
+      {% else %}
+      ❌ Failed to apply dotfiles Home Manager configuration
+      Error: {{ dotfiles_home_manager_switch.stderr | default('Unknown error') }}
+      {% endif %}
+      {% else %}
+      ⚠️  Skipped - no dotfiles Home Manager configuration found
+      💡 Make sure ~/dotfiles/.config/nix/flake.nix exists with your configuration
+      💡 Or check that nix_home_manager_config_exists is true
+      {% endif %}
+  when: nix_home_manager_enabled
+
+- name: Ensure zsh is installed
+  become: true
+  ansible.builtin.apt:
+    name: zsh
+    state: present
+    update_cache: false
+  when: ansible_os_family == "Debian"
+
+- name: Set zsh as default shell for root
+  become: true
+  ansible.builtin.user:
+    name: root
+    shell: /usr/bin/zsh
+  when: ansible_os_family == "Debian"
+
+- name: Set zsh as default shell for ansible_user
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    shell: /usr/bin/zsh
+  when: ansible_os_family == "Debian"
+
+- name: Display shell configuration result
+  ansible.builtin.debug:
+    msg: |
+      🐚 Shell Configuration:
+      ✅ Zsh installed and set as default shell
+      • Root shell: /usr/bin/zsh
+      • {{ ansible_user }} shell: /usr/bin/zsh
+      💡 Logout and login again for shell changes to take effect
