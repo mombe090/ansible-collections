@@ -49,7 +49,18 @@
 #    - name: geerlingguy.pip
 #    - name: geerlingguy.docker
 
+# - name: Install Custom Config on systemd
+#   hosts:
+#     - proxmox
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - name: truenas_nfs
+#       vars:
+#         truenas_host: '{{ lookup("env", "TRUENAS_HOST") }}'
+#         truenas_auth: '{{ lookup("env", "TRUENAS_AUTH") }}'
+- import_playbook: playbooks/homepage.playbook.yaml
 #- import_playbook: playbooks/pihole.playbook.yaml
-- import_playbook: playbooks/nix.playbook.yaml
+#- import_playbook: playbooks/nix.playbook.yaml
 #- import_playbook: playbooks/traefik.playbook.yaml
 #- import_playbook: playbooks/netbird.playbook.yaml

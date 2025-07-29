@@ -1,0 +1,47 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/settings
+
+title: Mombesoft Homelab Dashboard
+
+background:
+  image: "https://images.unsplash.com/photo-1504333638930-c8787321eee0?q=80&w=3270&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+  blur: xs # sm, md, xl... see https://tailwindcss.com/docs/backdrop-blur
+  saturate: 25 # 0, 50, 100... see https://tailwindcss.com/docs/backdrop-saturate
+  brightness: 50 # 0, 50, 75... see https://tailwindcss.com/docs/backdrop-brightness
+  opacity: 60 # 0-100
+
+theme: dark
+color: blue
+
+useEqualHeights: true
+
+layout:
+  HOME-LAPTOP:
+    header: true
+    style: row
+    columns: 4
+  DNS:
+    header: true
+    style: row
+    columns: 4
+  Containers:
+    header: true
+    style: row
+    columns: 3
+  GitOps:
+    header: true
+    style: row
+    columns: 3
+  Storage:
+    header: true
+    style: row
+    columns: 4
+  Security:
+    header: true
+    style: row
+    columns: 3
+  Other:
+    header: true
+    style: row
+    columns: 4

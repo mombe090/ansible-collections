@@ -19,6 +19,7 @@
           - 192.168.10.100 principal-dns.{{ domain }}
           - 192.168.10.200 secondary-dns.{{ domain }}
         cnameRecords:
+          - homepage.{{ domain }},{{ proxy_host }}
           - truenas.{{ domain }},{{ proxy_host }}
           - nas.{{ domain }},{{ proxy_host }}
           - pbs.{{ domain }},{{ proxy_host }}

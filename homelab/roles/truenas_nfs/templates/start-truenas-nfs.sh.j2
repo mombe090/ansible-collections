@@ -1,0 +1,13 @@
+#!/bin/bash
+tries=0; max_tries=3; success=0;
+while [ $tries -lt $max_tries ]; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --request POST --url https://{{ truenas_host }}/api/v2.0/service/start --header "authorization: Basic {{ truenas_auth }}" --header "content-type: application/json" --data '{"service": "nfs"}');
+  echo "Attempt $((tries+1)): HTTP code $code";
+  if [[ "$code" =~ ^2 ]]; then
+    echo "NFS service started successfully.";
+    exit 0
+  fi
+  tries=$((tries+1)); sleep 2;
+done
+echo "Failed to start NFS service after $max_tries attempts (last code: $code)";
+exit 1
