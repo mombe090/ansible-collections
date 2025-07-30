@@ -1,0 +1,14 @@
+# Default variables for multipass role
+vm_image: "jammy"
+vm_name: "homelab-vm"
+vm_allocated_cpu: 1
+vm_allocated_memory: "1G"
+vm_allocated_disk: "1G"
+ip_address: "192.168.10.50"
+gateway: "192.168.10.1"
+nameservers:
+  - "192.168.10.1"
+  - "8.8.8.8"
+  - "1.1.1.1"
+network_interface: "enp0s2"
+dhcp4: false

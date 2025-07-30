@@ -222,7 +222,9 @@ This role depends on:
     - role: nix
       tags: ['nix', 'development']
 ```
+
 ---
+
 - hosts: homelab
   become: false
   gather_facts: true
@@ -235,8 +237,9 @@ This role depends on:
       - "auto-optimise-store = true"
   
   roles:
-    - role: nix
+  - role: nix
       tags: ['nix', 'package-manager']
+
 ```
 
 ## Usage Examples

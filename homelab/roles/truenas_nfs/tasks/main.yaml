@@ -1,0 +1,57 @@
+---
+# roles/truenas_nfs/tasks/main.yaml
+- name: Deploy start-truenas-nfs.sh script
+  become: true
+  ansible.builtin.template:
+    src: start-truenas-nfs.sh.j2
+    dest: /usr/local/bin/start-truenas-nfs.sh
+    mode: "0755"
+- name: Ensure curl is installed
+  become: true
+  ansible.builtin.package:
+    name: curl
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create systemd unit to start NFS service on TrueNAS
+  become: true
+  ansible.builtin.template:
+    src: start-truenas-nfs.service.j2
+    dest: /etc/systemd/system/start-truenas-nfs.service
+    mode: "0644"
+
+- name: Create systemd timer to run service at boot
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/start-truenas-nfs.timer
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Start TrueNAS NFS Service at boot
+
+      [Timer]
+      OnBootSec=30
+      Unit=start-truenas-nfs.service
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+
+- name: Reload systemd
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable and start systemd timer
+  become: true
+  ansible.builtin.systemd:
+    name: start-truenas-nfs.timer
+    enabled: true
+    state: started
+
+- name: Enable and start systemd service
+  become: true
+  ansible.builtin.systemd:
+    name: start-truenas-nfs.service
+    enabled: true
+    state: started

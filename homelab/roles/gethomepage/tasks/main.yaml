@@ -1,0 +1,51 @@
+---
+# roles/gethomepage/tasks/main.yaml
+
+- name: Ensure homepage custom config directory exists
+  become: true
+  ansible.builtin.file:
+    path: "{{ homepage_custom_dir | default('/opt/homepage/custom') }}"
+    state: directory
+    mode: "0755"
+
+- name: Deploy homepage custom config
+  become: true
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ homepage_custom_dir | default('/opt/homepage/custom') }}/{{ item }}"
+    mode: "0644"
+  loop:
+    - "settings.yaml"
+    - "services.yaml"
+    - "widgets.yaml"
+
+- name: Deploy homepage docker compose file
+  become: true
+  ansible.builtin.template:
+    src: compose.yaml.j2
+    dest: "{{ homepage_compose_dir | default('/opt/homepage') }}/compose.yaml"
+    mode: "0644"
+
+- name: Ensure homepage_data volume directory exists (for local bind mount)
+  become: true
+  ansible.builtin.file:
+    path: "{{ homepage_data_dir | default('/opt/homepage/data') }}"
+    state: directory
+    mode: "0755"
+
+- name: Tear down existing homepage services
+  community.docker.docker_compose_v2:
+    project_src: "{{ homepage_compose_dir | default('/opt/homepage') }}"
+    state: absent
+    remove_orphans: true
+  become_user: "{{ ansible_user }}"
+  tags:
+    - homepage
+
+- name: Ensure homepage is running
+  community.docker.docker_compose_v2:
+    project_src: "{{ homepage_compose_dir | default('/opt/homepage') }}"
+    state: present
+  become_user: "{{ ansible_user }}"
+  tags:
+    - homepage

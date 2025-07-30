@@ -1,0 +1,13 @@
+[Unit]
+Description=Start TrueNAS NFS Service via API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/start-truenas-nfs.sh
+TimeoutSec=30
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

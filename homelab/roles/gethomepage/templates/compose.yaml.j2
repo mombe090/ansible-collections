@@ -1,0 +1,21 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    networks:
+      - proxy
+    ports:
+      - "{{ homepage_port | default('3000') }}:3000"
+    environment:
+      TZ: {{ homepage_timezone | default('UTC') }}
+      HOMEPAGE_ALLOWED_HOSTS: homepage.home.mombesoft.com
+    volumes:
+      - {{ homepage_custom_dir | default('/opt/homepage/custom') }}:/app/config
+    labels:
+{% for label in homepage_labels %}
+      - {{ label }}
+{% endfor %}
+networks:
+  proxy:
+    external: true

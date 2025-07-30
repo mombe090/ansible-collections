@@ -1,0 +1,27 @@
+---
+- name: Deploy Multipass VM instances with cloud-init
+  hosts:
+    - localhost
+  gather_facts: true
+  become: false
+  vars:
+    virtual_machines:
+      - name: primary-dns
+        image: "jammy"
+        ip: "{{ lookup('env', 'HOMELAB_PRIMARY_DNS_IP') }}"
+  tasks:
+    - name: Create Multipass VMs
+      include_role:
+        name: multipass
+      with_items: "{{ virtual_machines }}"
+      vars:
+        vm_image: "{{ item.image }}"
+        vm_name: "{{ item.name }}"
+        user: '{{ lookup("env", "HOMELAB_USER") }}'
+        password: '{{ lookup("env", "HOMELAB_UNIX_PASSWORD") }}'
+        ssh_public_key: '{{ lookup("env", "HOMELAB_PUBLIC_KEY") }}'
+        vm_allocated_cpu: 1
+        vm_allocated_memory: "1G"
+        vm_allocated_disk: "5G"
+        ip_address: "{{ item.ip }}"
+        gateway: "{{ lookup('env', 'HOMELAB_GATEWAY') }}"

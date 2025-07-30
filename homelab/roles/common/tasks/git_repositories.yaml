@@ -14,16 +14,18 @@
 
 - name: Clone Ansible Collections Repo
   ansible.builtin.git:
-    repo: https://github.com/{{ ansible_user }}/ansible-collections.git
+    repo: git@github.com:{{ ansible_user }}/ansible-collections.git
     version: main
     dest: "~/ansible-collections"
     force: true
+    ssh_opts: "-o StrictHostKeyChecking=no"
   become_user: "{{ ansible_user }}"
 
 - name: Clone Dotfiles Repo
   ansible.builtin.git:
-    repo: https://github.com/{{ ansible_user }}/dotfiles.git
+    repo: git@github.com:{{ ansible_user }}/dotfiles.git
     version: main
     dest: "~/dotfiles"
     force: true
+    ssh_opts: "-o StrictHostKeyChecking=no"
   become_user: "{{ ansible_user }}"

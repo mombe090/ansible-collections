@@ -1,0 +1,34 @@
+---
+- name: Deploy Homepage dashboard on traefik node
+  hosts:
+    - proxy
+  gather_facts: true
+  become: true
+  roles:
+    - name: gethomepage
+      vars:
+        homepage_port: 3000
+        homepage_timezone: "America/Toronto"
+        homepage_custom_dir: "/opt/homepage/custom"
+        homepage_compose_dir: "/opt/homepage"
+        homepage_data_dir: "/opt/homepage/data"
+        homepage_labels:
+          - "traefik.enable=true"
+          - "traefik.http.routers.homepage.rule=Host(`homepage.{{ domain }}`)"
+          - "traefik.http.routers.homepage.entrypoints=https"
+          - "traefik.http.routers.homepage.tls=true"
+          - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+        domain: "home.mombesoft.com"
+        homepage_services:
+          - name: Traefik
+            icon: traefik.png
+            url: "https://traefik.{{ domain }}"
+            description: "Reverse Proxy"
+          - name: n8n
+            icon: n8n.png
+            url: "https://n8n.{{ domain }}"
+            description: "Automation Platform"
+          - name: TrueNAS
+            icon: truenas.png
+            url: "https://truenas.{{ domain }}"
+            description: "Storage"
