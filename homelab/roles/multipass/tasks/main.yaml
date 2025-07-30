@@ -1,0 +1,35 @@
+- name: Render cloud-init file for Multipass
+  ansible.builtin.template:
+    src: cloud-init.yaml.j2
+    dest: /tmp/{{ vm_name }}-cloud-init.yaml
+  become: false
+
+- name: Check if Multipass VM exists
+  ansible.builtin.shell:
+    cmd: multipass info {{ vm_name }}
+  register: multipass_info_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Launch Multipass VM with cloud-init
+  ansible.builtin.shell:
+    cmd: >
+      multipass launch {{ vm_image }}
+      --name {{ vm_name }}
+      --cpus {{ vm_allocated_cpu }}
+      --memory {{ vm_allocated_memory }}
+      --disk {{ vm_allocated_disk }}
+      --network "name=en1,mode=auto"
+      --cloud-init /tmp/{{ vm_name }}-cloud-init.yaml
+  when: multipass_info_check.rc != 0
+  become: false
+
+- name: Show instance info
+  ansible.builtin.shell:
+    cmd: multipass info {{ vm_name }}
+  register: multipass_info
+  changed_when: false
+
+- name: Print instance info
+  ansible.builtin.debug:
+    var: multipass_info.stdout

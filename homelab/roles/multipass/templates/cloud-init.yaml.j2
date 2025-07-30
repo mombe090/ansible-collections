@@ -1,0 +1,38 @@
+#cloud-config
+hostname: {{ vm_name }}.{{ domain | default('local') }}
+timezone: {{ multipass_timezone | default('America/Toronto') }}
+manage_etc_hosts: true
+users:
+  - default
+  - name: {{ user | default('ubuntu') }}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups:
+    - sudo
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: "{{ password | default('ubuntu') }}"
+    ssh_authorized_keys:
+      - "{{ ssh_public_key | default('') }}"
+    ssh_import_id:
+    - gh:{{ user | default('') }}
+write_files:
+  - path: /etc/netplan/01-netplan-config.yaml
+    permissions: '0600'
+    content: |
+      network:
+        version: 2
+        ethernets:
+          {{ network_interface | default('enp0s2') }}:
+            dhcp4: {{ dhcp4 | default('false') }}
+            addresses:
+              - {{ ip_address }}/{{ multipass_cidr | default('24') }}
+            routes:
+              - to: default
+                via: {{ gateway }}
+            nameservers:
+              addresses:
+                - {{ nameservers[0] }}
+                - {{ nameservers[1] | default('8.8.4.4') }}
+                - {{ nameservers[2] | default('1.1.1.1') }}
+runcmd:
+  - sudo netplan apply
