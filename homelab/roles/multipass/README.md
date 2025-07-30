@@ -23,7 +23,7 @@ Provision Ubuntu VMs on your local machine using [Multipass](https://multipass.r
 | `vm_name`               | `homelab-vm`   | Name of the VM                    |
 | `vm_allocated_cpu`      | `1`            | Number of CPUs                    |
 | `vm_allocated_memory`   | `1G`           | Memory size                       |
-| `vm_allocated_disk`     | `1G`           | Disk size                         |
+| `vm_allocated_disk`     | `10G`           | Disk size                         |
 | `ip_address`            |                | Static IP for VM                  |
 | `gateway`               |                | Gateway IP                        |
 | `nameservers`           | `["192.168.10.1", "8.8.8.8", "1.1.1.1"]` | List of DNS servers |
