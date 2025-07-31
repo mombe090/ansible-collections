@@ -1,10 +1,13 @@
 ---
 - name: Install DNS server with Pihole and Cloudflared
   hosts:
-    - dns
-    - dns2
+    - dns-principal
+    #- dns
+    #- dns2
   gather_facts: true
   become: true
+  vars:
+    virtualization_type: standard
   roles:
     - name: pihole
       vars:

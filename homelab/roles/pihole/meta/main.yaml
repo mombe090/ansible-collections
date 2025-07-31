@@ -1,11 +1,9 @@
 dependencies:
   - role: "common"
-
   - role: "geerlingguy.pip"
     vars:
       pip_install_packages:
         - name: docker
-
   - role: "geerlingguy.docker"
     vars:
       docker_users:

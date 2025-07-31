@@ -9,7 +9,7 @@
       - name: primary-dns
         image: "jammy"
         ip: "{{ lookup('env', 'HOMELAB_PRIMARY_DNS_IP') }}"
-        vm_reset: true
+        vm_reset: false
   tasks:
     - name: Create Multipass VMs
       include_role:

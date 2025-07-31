@@ -1,3 +1,4 @@
 - ansible.builtin.include_tasks: qemu-guest-agent.yaml
+  when: virtualization_type == "kvm"
 - ansible.builtin.include_tasks: essential_packages.yaml
 - ansible.builtin.include_tasks: git_repositories.yaml

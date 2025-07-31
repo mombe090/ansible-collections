@@ -61,7 +61,7 @@
 #         truenas_auth: '{{ lookup("env", "TRUENAS_AUTH") }}'
 #- import_playbook: playbooks/homepage.playbook.yaml
 - import_playbook: playbooks/multipass.playbook.yaml
-#- import_playbook: playbooks/pihole.playbook.yaml
+- import_playbook: playbooks/pihole.playbook.yaml
 #- import_playbook: playbooks/nix.playbook.yaml
 #- import_playbook: playbooks/traefik.playbook.yaml
 #- import_playbook: playbooks/netbird.playbook.yaml

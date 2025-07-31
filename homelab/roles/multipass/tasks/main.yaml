@@ -3,7 +3,7 @@
     cmd: multipass stop {{ vm_name }} && multipass delete {{ vm_name }} && multipass purge
   register: multipass_reset
   changed_when: multipass_reset.rc == 0
-  when: vm_reset | default(false)
+  when: vm_reset == true | default(false)
   become: false
 
 - name: Render cloud-init file for Multipass

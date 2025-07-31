@@ -1,0 +1,13 @@
+## .envrc.sample for pihole Ansible role
+
+# Copy this file to .envrc and edit values as needed.
+# Only variables defined in the role defaults are included.
+
+export PROJECT_NAME="ansible-collections"
+export PIHOLE_DIR="/opt/pihole"
+
+# Pi-hole timezone
+export PIHOLE_TIMEZONE="Africa/Monrovia"
+
+# Pi-hole admin password
+export PI_HOLE_ADMIN_PASSWORD="changeme"
