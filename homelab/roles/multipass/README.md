@@ -29,6 +29,7 @@ Provision Ubuntu VMs on your local machine using [Multipass](https://multipass.r
 | `nameservers`           | `["192.168.10.1", "8.8.8.8", "1.1.1.1"]` | List of DNS servers |
 | `network_interface`     | `enp0s2`       | Network interface name            |
 | `dhcp4`                 | `false`        | Use DHCP for interface            |
+| `vm_reset`              | `false`        | If true, stop, delete, and purge the VM before creation |
 
 ## Example Playbook
 
@@ -43,6 +44,7 @@ Provision Ubuntu VMs on your local machine using [Multipass](https://multipass.r
       - name: primary-dns
         image: "jammy"
         ip: "{{ lookup('env', 'HOMELAB_PRIMARY_DNS_IP') }}"
+        vm_reset: true
   tasks:
     - name: Create Multipass VMs
       include_role:
@@ -65,6 +67,7 @@ Provision Ubuntu VMs on your local machine using [Multipass](https://multipass.r
           - "8.8.8.8"
           - "1.1.1.1"
         dhcp4: false
+        vm_reset: item.vm_reset | default(false)
 ```
 
 ## Usage Tips

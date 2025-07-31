@@ -9,6 +9,7 @@
       - name: primary-dns
         image: "jammy"
         ip: "{{ lookup('env', 'HOMELAB_PRIMARY_DNS_IP') }}"
+        vm_reset: true
   tasks:
     - name: Create Multipass VMs
       include_role:
@@ -25,3 +26,4 @@
         vm_allocated_disk: "5G"
         ip_address: "{{ item.ip }}"
         gateway: "{{ lookup('env', 'HOMELAB_GATEWAY') }}"
+        vm_reset: item.vm_reset | default(false)
