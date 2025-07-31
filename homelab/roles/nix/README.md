@@ -221,7 +221,6 @@ This role depends on:
   roles:
     - role: nix
       tags: ['nix', 'development']
-```
 
 ---
 

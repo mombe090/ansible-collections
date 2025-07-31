@@ -12,7 +12,7 @@ This is a homelab automation project using Ansible to manage infrastructure acro
 
 ### Role Organization
 
-```
+```text
 homelab/roles/{role_name}/
 ├── defaults/main.yaml    # Default variables (lowest precedence)
 ├── vars/main.yaml        # Role variables (higher precedence)

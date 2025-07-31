@@ -6,7 +6,8 @@
     "**/node_modules",
     ".devbox/",
     ".ruff_cache/",
-    "**/geerlingguy.*/*.md"
+    "**/geerlingguy**/*.md",
+    ".venv/"
   ],
   "config": {
     "default": true,
