@@ -1,0 +1,21 @@
+{
+  "globs": [
+    "**/*.md"
+  ],
+  "ignores": [
+    "**/node_modules",
+    ".devbox/",
+    ".ruff_cache/",
+    "**/geerlingguy.*/*.md"
+  ],
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD033": {
+      "allowed_elements": [
+        "details",
+        "summary"
+      ]
+    }
+  }
+}

@@ -69,6 +69,6 @@ repos:
       - id: markdownlint-cli2
         name: markdownlint-cli2
         description: "Checks the style of Markdown/CommonMark files."
-        entry: markdownlint-cli2 **/*.md "!.devbox" "!homelab/roles/geerlingguy.*/*.md" "!.venv" "!.github/copilot-instructions.md" --fix
+        entry: markdownlint-cli2 **/*.md --config .markdownlint-cli2.jsonc --fix
         language: node
         types: [markdown]
