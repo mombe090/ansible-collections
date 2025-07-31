@@ -69,6 +69,6 @@ repos:
       - id: markdownlint-cli2
         name: markdownlint-cli2
         description: "Checks the style of Markdown/CommonMark files."
-        entry: npx markdownlint-cli2 **/*.md
+        entry: uv run markdownlint-cli2 **/*.md
         language: node
         types: [markdown]
