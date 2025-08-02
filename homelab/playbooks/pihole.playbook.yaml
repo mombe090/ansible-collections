@@ -19,8 +19,9 @@
           - 192.168.10.2 truenas-srv.{{ domain }}
           - 192.168.10.3 pbs-srv.{{ domain }}
           - 192.168.10.5 {{ proxy_host }}
-          - 192.168.10.100 principal-dns.{{ domain }}
+          - 192.168.10.250 principal-dns.{{ domain }}
           - 192.168.10.200 secondary-dns.{{ domain }}
+          - 192.168.10.200 tertiary-dns.{{ domain }}
         cnameRecords:
           - homepage.{{ domain }},{{ proxy_host }}
           - truenas.{{ domain }},{{ proxy_host }}
@@ -28,6 +29,7 @@
           - pbs.{{ domain }},{{ proxy_host }}
           - dns.{{ domain }},{{ proxy_host }}
           - dns2.{{ domain }},{{ proxy_host }}
+          - dns3.{{ domain }},{{ proxy_host }}
           - pve.{{ domain }},{{ proxy_host }}
           - pve2.{{ domain }},{{ proxy_host }}
           - n8n.{{ domain }},{{ proxy_host }}

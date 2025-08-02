@@ -1,0 +1,83 @@
+- name: Install Development tools on RedHat family
+  become: true
+  ansible.builtin.dnf:
+    name: "@Development Tools"
+    state: present
+  when: ansible_os_family == 'RedHat' and install_dev_tools == true
+
+- name: Install EPEL repository
+  become: true
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  when: ansible_os_family == 'RedHat' and install_dev_tools == true
+
+- name: Install essential packages on RedHat family
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - git
+      - util-linux-user
+      - ca-certificates
+      - curl
+      - cryptsetup
+      - direnv
+      - dnf-utils
+      - fzf
+      - python3
+      - python3-pip
+      - git
+      - gh
+      - gnupg
+      - jq
+      - neovim
+      - nmap
+      - nfs-utils
+      - python3.12
+      - qemu-guest-agent
+      - iscsi-initiator-utils
+      - stow
+      - tmux
+      - unzip
+      - vim
+      - openssl-devel
+      - bzip2-devel
+      - libffi-devel
+      - yum-utils
+      - xz
+      - zoxide
+      - zip
+      - zsh
+    update_cache: true
+  when: ansible_os_family == 'RedHat'
+
+- name: Install essential packages on Debian family
+  become: true
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - direnv
+      - fzf
+      - git
+      - gh
+      - gnupg
+      - jq
+      - python3
+      - python3-pip
+      - neovim
+      - nmap
+      - nfs-common
+      - prometheus-node-exporter
+      - qemu-guest-agent
+      - stow
+      - tmux
+      - unzip
+      - vim
+      - xz-utils
+      - zoxide
+      - zip
+      - zsh
+    update_cache: true
+  when: ansible_os_family == 'Debian'

@@ -1,4 +1,33 @@
-- ansible.builtin.include_tasks: qemu-guest-agent.yaml
+- ansible.builtin.include_tasks: qeumu_ga.yaml
   when: virtualization_type == "kvm"
-- ansible.builtin.include_tasks: essential_packages.yaml
-- ansible.builtin.include_tasks: git_repositories.yaml
+
+- ansible.builtin.include_tasks: base_packages.yaml
+
+- ansible.builtin.include_tasks: brew_packages.yaml
+  when: install_brew == true
+
+- ansible.builtin.include_tasks: git_setup.yaml
+- ansible.builtin.include_tasks: zsh_config.yaml
+
+- name: Copy Role files
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/"
+    dest: /tmp
+    mode: "0777"
+  become: true
+
+- name: Install Homebrew Packages
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      chmod +x /tmp/brew-packages.sh
+      /bin/bash /tmp/brew-packages.sh
+  become_user: "{{ ansible_user }}"
+  when: install_brew == true
+
+- name: Install go-task
+  become: true
+  ansible.builtin.shell:
+    cmd: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+    creates: /usr/local/bin/task
+  when: install_dev_tools == true

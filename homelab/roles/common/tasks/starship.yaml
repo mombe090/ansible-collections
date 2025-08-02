@@ -1,0 +1,18 @@
+- name: Download Hack Nerd Font
+  ansible.builtin.get_url:
+    url: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hack.zip
+    dest: /tmp
+
+- name: Unzip Hack Nerd Font
+  become: true
+  ansible.builtin.unarchive:
+    src: /tmp/Hack.zip
+    dest: /usr/share/fonts
+    remote_src: true
+
+- name: Install Starship
+  become: true
+  ansible.builtin.shell: |
+    curl -sS https://starship.rs/install.sh | sh -s -- --yes
+  args:
+    creates: /usr/local/bin/starship

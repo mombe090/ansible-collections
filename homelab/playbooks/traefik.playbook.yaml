@@ -19,12 +19,17 @@
             protocol: https
           - name: dns
             hostname: dns.{{ domain }}
-            ip: 192.168.10.100
+            ip: 192.168.10.250
             port: 80
             protocol: http
           - name: dns2
             hostname: dns2.{{ domain }}
             ip: 192.168.10.200
+            port: 80
+            protocol: http
+          - name: dns3
+            hostname: dns3.{{ domain }}
+            ip: 192.168.10.100
             port: 80
             protocol: http
           - name: pve

@@ -1,5 +1,10 @@
 dependencies:
   - role: "common"
+    vars:
+      install_brew: true
+      install_starship: true
+      install_dev_tools: false
+
   - role: "geerlingguy.pip"
     vars:
       pip_install_packages:
@@ -7,4 +12,4 @@ dependencies:
   - role: "geerlingguy.docker"
     vars:
       docker_users:
-        - '{{ ansible_user }}'
+        - "{{ ansible_user }}"

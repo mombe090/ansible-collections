@@ -1,6 +1,7 @@
 # Default variables for multipass role
 vm_image: "jammy"
 vm_name: "homelab-vm"
+vm_reset: false
 vm_allocated_cpu: 1
 vm_allocated_memory: "1G"
 vm_allocated_disk: "1G"

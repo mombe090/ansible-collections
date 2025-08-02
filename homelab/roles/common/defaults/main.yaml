@@ -1,4 +1,6 @@
-initialization: true
-git_user_name: "{{ lookup('env', 'HOMELAB_USER_FULLNAME') | default('Your Full Name') }}"
-git_user_email: "{{ lookup('env', 'HOMELAB_USER_EMAIL') | default('your@email.tld') }}"
+git_user_name: "{{ lookup('env', 'HOMELAB_USER_FULLNAME') }}"
+git_user_email: "{{ lookup('env', 'HOMELAB_USER_EMAIL') }}"
 virtualization_type: kvm
+install_starship: true
+install_brew: false
+install_dev_tools: false
