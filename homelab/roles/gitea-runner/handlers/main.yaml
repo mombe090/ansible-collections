@@ -1,0 +1,7 @@
+---
+- name: restart gitea runner
+  community.docker.docker_compose_v2:
+    project_src: "{{ gitea_runner_dir }}"
+    state: present
+    recreate: always
+  become: true

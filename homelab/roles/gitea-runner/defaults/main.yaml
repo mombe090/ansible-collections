@@ -1,0 +1,16 @@
+# Service configuration
+gitea_runner_enabled: true
+gitea_runner_dir: "/opt/gitea-runner"
+gitea_runner_version: "nightly"
+
+# Runner configuration
+gitea_runner_name: '{{ lookup("env", "GITEA_RUNNER_NAME") | default("homelab-runner") }}'
+gitea_runner_labels: '{{ lookup("env", "GITEA_RUNNER_LABELS") | default("ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host") }}'
+gitea_runner_log_level: '{{ lookup("env", "GITEA_RUNNER_LOG_LEVEL") | default("info") }}'
+
+# Gitea instance configuration
+gitea_instance_url: "https://gitea.{{ domain }}"
+gitea_runner_registration_token: "{{ registration_token }}"
+
+# Docker configuration
+gitea_force_pull: "missing"

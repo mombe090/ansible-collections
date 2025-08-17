@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  gitea-runner:
+    image: docker.io/gitea/act_runner:${RUNNER_VERSION:-nightly}
+    container_name: gitea-runner
+    restart: unless-stopped
+    user: "0:0"  # Run as root to access Docker socket
+    environment:
+      - GITEA_INSTANCE_URL=${GITEA_INSTANCE_URL}
+      - GITEA_RUNNER_REGISTRATION_TOKEN=${GITEA_RUNNER_REGISTRATION_TOKEN}
+      - GITEA_RUNNER_NAME=${GITEA_RUNNER_NAME}
+      - GITEA_RUNNER_LABELS=${GITEA_RUNNER_LABELS}
+      - GITEA_RUNNER_LOG_LEVEL=${GITEA_RUNNER_LOG_LEVEL}
+      - GITEA_RUNNER_JOB_CONTAINER_NETWORK=proxy
+    networks:
+      - proxy
+    volumes:
+      - ${RUNNER_DATA_DIR}/data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      # Mount Docker binary for Docker-in-Docker support
+      - /usr/bin/docker:/usr/bin/docker:ro
+    privileged: true  # Required for Docker access
+    security_opt:
+      - no-new-privileges:false
+    labels:
+      - "traefik.enable=false"
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f act_runner || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  proxy:
+    external: true

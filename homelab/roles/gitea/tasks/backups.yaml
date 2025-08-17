@@ -33,10 +33,10 @@
           --no-password \
           --verbose \
           --format=custom \
-          --file=/backups/gitea-db-{{ ansible_date_time.epoch }}.dump
+          --file=/backups/gitea-db-{{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour }}.dump
       register: postgres_backup_result
       args:
-        creates: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-db-{{ ansible_date_time.epoch }}.dump"
+        creates: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-db-{{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour }}.dump"
 
     - name: Ensure backup directory exists in gitea container
       community.docker.docker_container_exec:
@@ -50,7 +50,7 @@
         command: >
           gitea dump
           --config /data/gitea/conf/app.ini
-          --file /data/backups/gitea-app-{{ ansible_date_time.epoch }}.zip
+          --file /data/backups/gitea-app-{{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour }}.zip
           --type zip
           --skip-db
         chdir: /data
@@ -60,9 +60,9 @@
     - name: Create combined backup archive
       ansible.builtin.archive:
         path:
-          - "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-app-{{ ansible_date_time.epoch }}.zip"
-          - "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-db-{{ ansible_date_time.epoch }}.dump"
-        dest: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-complete-{{ ansible_date_time.epoch }}.tar.gz"
+          - "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-app-{{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour }}.zip"
+          - "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-db-{{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour }}.dump"
+        dest: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-complete-{{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour }}.tar.gz"
         format: gz
         owner: "1000"
         group: "1000"
@@ -73,7 +73,7 @@
         msg:
           - "PostgreSQL backup: {{ 'Completed successfully' if postgres_backup_result.rc == 0 else 'Failed with error' }}"
           - "Gitea backup: {{ gitea_backup_result.stdout }}"
-          - "Complete backup created: gitea-complete-{{ ansible_date_time.epoch }}.tar.gz"
+          - "Complete backup created: gitea-complete-{{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour }}.tar.gz"
 
     - name: Find old backup files (older than retention days)
       ansible.builtin.find:

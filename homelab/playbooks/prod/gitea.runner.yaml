@@ -1,0 +1,16 @@
+---
+- name: Deploy Gitea Actions Runner
+  hosts: proxy.prod.home.mombesoft.com
+  become: true
+  gather_facts: true
+  vars:
+    domain: '{{ lookup("env", "HOMELAB_DOMAIN_PROD") }}'
+
+  roles:
+    - role: gitea-runner
+      vars:
+        registration_token: '{{ lookup("env", "GITEA_RUNNER_REGISTRATION_TOKEN_PROD1") }}'
+        gitea_runner_enabled: true
+        gitea_runner_name: "runner-prod1"
+        gitea_runner_labels: "ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host,prod:host"
+      tags: [gitea-runner, runner, actions]
