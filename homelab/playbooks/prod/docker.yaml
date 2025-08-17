@@ -1,6 +1,8 @@
 ---
 - name: Gitea Backup Management
-  hosts: proxy.prod.home.mombesoft.com
+  hosts:
+    - databases
+    - proxy.prod.home.mombesoft.com
   become: true
   gather_facts: true
   vars:

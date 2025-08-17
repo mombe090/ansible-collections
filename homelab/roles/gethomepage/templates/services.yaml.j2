@@ -96,3 +96,13 @@
             type: gitea
             url: "https://gitea.{{ domain }}"
             key: "{{ lookup('env', 'GITEA_ADMIN_TOKEN') }}"
+
+- security:
+    - Authentik:
+        icon: authentik.svg
+        href: "https://authentik.{{ domain }}"
+        description: "Authentik self-hosted identity provider"
+        widget:
+            type: authentik
+            url: "https://authentik.{{ domain }}"
+            key: "{{ lookup('env', 'AUTHENTIK_ADMIN_TOKEN') }}"
