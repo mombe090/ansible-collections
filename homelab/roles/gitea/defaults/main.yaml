@@ -11,6 +11,11 @@ gitea_backup_dir: "/backups/gitea"
 gitea_version: "1.24.5"
 gitea_domain: "gitea.{{ domain }}"
 
+# Runner configuration
+runner_name: "runner-prod1"
+runner_labels: "gitea"
+instance_url: "https://gitea.{{ domain }}"
+
 # Database configuration
 postgres_user: "{{ username }}"
 postgres_password: "{{ password }}"

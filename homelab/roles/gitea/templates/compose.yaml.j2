@@ -16,6 +16,9 @@ services:
       - GITEA__server__ROOT_URL=https://gitea.{{ domain }}
       - GITEA__ui__DEFAULT_THEME=catppuccin-frappe-sky
       - GITEA__ui__THEMES="catppuccin-macchiato-sky,catppuccin-frappe-sky,catppuccin-latte-sky,catppuccin-mocha-sky,catppuccin-teal-auto,catppuccin-frappe-blue,catppuccin-latte-blue,catppuccin-macchiato-blue,catppuccin-mocha-blue,catppuccin-frappe-sky,catppuccin-latte-sky,catppuccin-mocha-sky"
+
+      # ACTIONS
+      - GITEA__actions__ENABLED=true
     networks:
       - proxy
     volumes:
@@ -31,6 +34,17 @@ services:
       {% for label in gitea_labels %}
       - "{{ label }}"
       {% endfor %}
+
+  runner:
+    image: docker.io/gitea/act_runner:nightly
+    environment:
+      GITEA_INSTANCE_URL: "${INSTANCE_URL}"
+      GITEA_RUNNER_REGISTRATION_TOKEN: "${REGISTRATION_TOKEN}"
+      GITEA_RUNNER_NAME: "${RUNNER_NAME}"
+      GITEA_RUNNER_LABELS: "${RUNNER_LABELS}"
+    volumes:
+      - {{ gitea_dir}}/runners:/data
+      - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
   proxy:
