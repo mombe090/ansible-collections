@@ -15,6 +15,6 @@
         username: "{{ lookup('env', 'POSTGRES_USER') | default('gitea') }}"
         password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
         registration_token: "{{ lookup('env', 'GITEA_RUNNER_REGISTRATION_TOKEN') }}"
-        runner_name: "runner-prod1"
+        runner_name: "production-1"
         runner_labels: "gitea"
         instance_url: "https://gitea.{{ domain }}"

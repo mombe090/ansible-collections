@@ -21,6 +21,7 @@ services:
       - GITEA__actions__ENABLED=true
     networks:
       - proxy
+      - gitea
     volumes:
       - {{ gitea_dir}}/data:/data
       - {{ gitea_dir }}/custom/css:/data/gitea/public/assets/css/
@@ -38,14 +39,20 @@ services:
   runner:
     image: docker.io/gitea/act_runner:nightly
     environment:
-      GITEA_INSTANCE_URL: "${INSTANCE_URL}"
-      GITEA_RUNNER_REGISTRATION_TOKEN: "${REGISTRATION_TOKEN}"
+      GITEA_INSTANCE_URL: "http://gitea:3000"
+      GITEA_RUNNER_REGISTRATION_TOKEN: "${ REGISTRATION_TOKEN }"
       GITEA_RUNNER_NAME: "${RUNNER_NAME}"
-      GITEA_RUNNER_LABELS: "${RUNNER_LABELS}"
+    networks:
+      - gitea
+    depends_on:
+      - gitea
     volumes:
       - {{ gitea_dir}}/runners:/data
       - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
   proxy:
+    external: true
+  gitea:
+    driver: bridge
     external: true
