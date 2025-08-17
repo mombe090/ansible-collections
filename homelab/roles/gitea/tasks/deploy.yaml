@@ -33,6 +33,11 @@
       notify:
         - restart gitea
 
+    - name: Make sure the gitea docker networks is present
+      docker_network:
+        name: gitea
+        state: present
+
     - name: Deploy environment file
       ansible.builtin.template:
         src: .env.j2

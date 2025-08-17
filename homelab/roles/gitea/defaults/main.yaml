@@ -27,6 +27,14 @@ gitea_backup_enabled: true
 gitea_backup_retention_days: 30
 gitea_backup_cleanup: true
 gitea_backup_schedule: "0 4 * * *" # Daily at 4 AM
+gitea_force_pull: 'missing'
+
+# Actions runner configuration
+gitea_runner_enabled: true
+gitea_runner_name: '{{ lookup("env", "GITEA_RUNNER_NAME") | default("homelab-runner") }}'
+gitea_runner_labels: '{{ lookup("env", "GITEA_RUNNER_LABELS") | default("ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host") }}'
+gitea_runner_log_level: '{{ lookup("env", "GITEA_RUNNER_LOG_LEVEL") | default("info") }}'
+
 
 # TRAEFIK labels for gitea
 gitea_labels:

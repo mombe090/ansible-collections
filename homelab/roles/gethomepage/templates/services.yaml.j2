@@ -85,3 +85,14 @@
           url: http://pihole-mac.{{ domain }}:80
           version: 6
           key: "{{ lookup('env', 'PI_HOLE_ADMIN_PASSWORD') }}"
+
+
+- devtools:
+    - Gitea:
+        icon: gitea.svg
+        href: "https://gitea.{{ domain }}"
+        description: "Gitea self-hosted Git service"
+        widget:
+            type: gitea
+            url: "https://gitea.{{ domain }}"
+            key: "{{ lookup('env', 'GITEA_ADMIN_TOKEN') }}"

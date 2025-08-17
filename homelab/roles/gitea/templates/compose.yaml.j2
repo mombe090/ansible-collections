@@ -37,10 +37,10 @@ services:
       {% endfor %}
 
   runner:
-    image: docker.io/gitea/act_runner:nightly
+    image: docker.io/gitea/act_runner:latest
     environment:
       GITEA_INSTANCE_URL: "http://gitea:3000"
-      GITEA_RUNNER_REGISTRATION_TOKEN: "${ REGISTRATION_TOKEN }"
+      GITEA_RUNNER_REGISTRATION_TOKEN: "${REGISTRATION_TOKEN}"
       GITEA_RUNNER_NAME: "${RUNNER_NAME}"
     networks:
       - gitea

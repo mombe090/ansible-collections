@@ -1,0 +1,96 @@
+---
+- name: Setup Gitea Actions runner
+  block:
+    - name: Create runner directory structure
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+        owner: "1000"
+        group: "1000"
+      loop:
+        - "{{ gitea_dir }}/runners"
+        - "{{ gitea_dir }}/runners/config"
+        - "{{ gitea_dir }}/runners/cache"
+      become: true
+
+    - name: Copy runner docker compose configuration
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/compose.runner.yaml.j2"
+        dest: "{{ gitea_dir }}/runners/compose.yaml"
+        mode: "0644"
+        owner: "1000"
+        group: "1000"
+      become: true
+      notify: restart gitea runner
+
+    - name: Wait for Gitea to be ready
+      ansible.builtin.uri:
+        url: "https://gitea.{{ domain }}/api/healthz"
+        method: GET
+        status_code: 200
+        validate_certs: false
+      register: gitea_health
+      until: gitea_health.status == 200
+      retries: 30
+      delay: 10
+
+    - name: Start runner service with docker-compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ gitea_dir }}/runners"
+        files:
+          - compose.yaml
+        state: present
+        pull: "{{ gitea_force_pull | default('missing') }}"
+      become: true
+
+    - name: Check if runner is already registered
+      ansible.builtin.stat:
+        path: "{{ gitea_dir }}/runners/config/.runner"
+      register: runner_config
+
+    - name: Register runner with Gitea instance
+      community.docker.docker_container_exec:
+        container: gitea-runner
+        command: >
+          act_runner register
+          --instance https://gitea.{{ domain }}
+          --token {{ registration_token }}
+          --name {{ gitea_runner_name | default('homelab-runner') }}
+          --labels {{ gitea_runner_labels | default('ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host') }}
+        user: runner
+      when: not runner_config.stat.exists
+      register: runner_registration
+
+    - name: Display runner registration result
+      ansible.builtin.debug:
+        msg: "Runner registration: {{ runner_registration.stdout if runner_registration.changed else 'Already registered' }}"
+
+    - name: Restart runner service after registration
+      community.docker.docker_compose_v2:
+        project_src: "{{ gitea_dir }}"
+        files:
+          - compose.runner.yaml
+        state: present
+        restarted: true
+      when: runner_registration.changed
+
+  rescue:
+    - name: Display runner setup error
+      ansible.builtin.debug:
+        msg: "Runner setup failed. Check Gitea connectivity and registration token."
+
+    - name: Show runner logs for debugging
+      community.docker.docker_container_exec:
+        container: gitea-runner
+        command: cat /data/act_runner.log
+      register: runner_logs
+      ignore_errors: true
+
+    - name: Display runner logs
+      ansible.builtin.debug:
+        msg: "{{ runner_logs.stdout }}"
+      when: runner_logs is defined
+
+  become: true
+  tags: [gitea, runner, actions]
