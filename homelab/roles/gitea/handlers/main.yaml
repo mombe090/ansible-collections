@@ -1,0 +1,14 @@
+- name: restart gitea
+  community.docker.docker_compose_v2:
+    project_src: "{{ gitea_dir }}"
+    state: present
+    recreate: always
+    wait: true
+    wait_timeout: 180
+  become: true
+
+- name: Remove current env file
+  ansible.builtin.file:
+    path: "{{ gitea_dir }}/.env"
+    state: absent
+  become: true

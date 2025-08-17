@@ -40,9 +40,12 @@ services:
       PIHOLE_DNS_: '172.30.0.80#5053'
       DNSMASQ_LISTENING: 'all'
     volumes:
+      - './etc-pihole:/etc/pihole'
       - '{{ pihole_dir }}/pihole.toml:/etc/pihole/pihole.toml'
     cap_add:
       - NET_ADMIN
+      - SYS_TIME
+      - SYS_NICE
     restart: unless-stopped
     depends_on:
       - cloudflared

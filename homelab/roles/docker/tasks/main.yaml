@@ -1,0 +1,26 @@
+- name: Start and enable docker service
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Check if /etc/docker/daemon.json contains 192.168.10
+  ansible.builtin.shell:
+    cmd: grep -q "192.168.10" /etc/docker/daemon.json
+  register: docker_config_check
+  ignore_errors: true
+
+- name: Add dns config in docker daemon config
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "dns": ["192.168.10.111", "192.168.10.250"]
+      }
+  when: docker_config_check.rc != 0
+
+- name: Restart docker service
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  when: docker_config_check.rc != 0

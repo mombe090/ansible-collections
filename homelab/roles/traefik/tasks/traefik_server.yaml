@@ -24,5 +24,5 @@
     state: present
   become_user: '{{ ansible_user }}'
   environment:
-    CLOUD_FLARE_HOME_API_TOKEN: '{{ cloudflare_api_key }}'
+    CLOUDFLARE_HOME_API_TOKEN_PROD: '{{ cloudflare_api_key }}'
     TRAEFIK_DASHBOARD_CREDENTIALS: '{{ traefik_dashboard_credentials }}'

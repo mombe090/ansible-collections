@@ -4,3 +4,4 @@ virtualization_type: kvm
 install_starship: true
 install_brew: false
 install_dev_tools: false
+initialization: false

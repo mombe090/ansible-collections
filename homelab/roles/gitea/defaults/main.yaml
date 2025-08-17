@@ -1,0 +1,31 @@
+postgres_host: postgres
+postgres_port: 5432
+postgres_db: gitea
+username: gitea
+password: gitea
+
+# Service configuration
+gitea_enabled: true
+gitea_dir: "/opt/gitea"
+gitea_backup_dir: "/backups/gitea"
+gitea_version: "1.24.5"
+gitea_domain: "gitea.{{ domain }}"
+
+# Database configuration
+postgres_user: "{{ username }}"
+postgres_password: "{{ password }}"
+gitea_db_name: "{{ postgres_db }}"
+
+# Backup configuration
+gitea_backup_enabled: true
+gitea_backup_retention_days: 30
+gitea_backup_cleanup: true
+gitea_backup_schedule: "0 4 * * *" # Daily at 4 AM
+
+# TRAEFIK labels for gitea
+gitea_labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.gitea.rule=Host(`gitea.{{ domain }}`)"
+  - "traefik.http.routers.gitea.entrypoints=https"
+  - "traefik.http.routers.gitea.tls=true"
+  - "traefik.http.services.gitea.loadbalancer.server.port=3000"

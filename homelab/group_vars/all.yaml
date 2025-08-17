@@ -1,3 +1,31 @@
 ansible_user: '{{ lookup("env", "HOMELAB_USER")}}'
 domain: '{{ lookup("env", "HOMELAB_DOMAIN") }}'
-proxy_host : 'proxy.{{ lookup("env", "HOMELAB_DOMAIN") }}'
+proxy_host: 'proxy.{{ lookup("env", "HOMELAB_DOMAIN") }}'
+proxmox_username: "{{ lookup('env', 'PROXMOX_HOMEPAGE_USERNAME') }}"
+proxmox_password: "{{ lookup('env', 'PROXMOX_HOMEPAGE_PASSWORD') }}"
+
+proxmox_token: "{{ lookup('env', 'PROXMOX_HOMEPAGE_RO_TOKEN') }}"
+proxmox_secret: "{{ lookup('env', 'PROXMOX_HOMEPAGE_RO_SECRET') }}"
+
+postgres_admin_password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
+postgres_host: "192.168.10.20"
+postgres_port: 5432
+postgres_default_collate: "en_FR.UTF-8"
+postgres_default_ctype: "en_FR.UTF-8"
+
+git_user_name: "{{ lookup('env', 'HOMELAB_USER_FULLNAME') }}"
+git_user_email: "{{ lookup('env', 'HOMELAB_USER_EMAIL') }}"
+
+db_users:
+  - name: authentik
+    password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
+  - name: gitea
+    password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
+
+databases:
+  - name: authentik
+    owner: authentik
+    encoding: UTF8
+  - name: gitea
+    owner: gitea
+    encoding: UTF8

@@ -1,0 +1,14 @@
+- name: restart authentik
+  community.docker.docker_compose_v2:
+    project_src: "{{ authentik_dir }}"
+    state: present
+    recreate: always
+    wait: true
+    wait_timeout: 180
+  become: true
+
+- name: Remove current env file
+  ansible.builtin.file:
+    path: "{{ authentik_dir }}/.env"
+    state: absent
+  become: true

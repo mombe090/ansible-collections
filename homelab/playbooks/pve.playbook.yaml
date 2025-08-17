@@ -1,0 +1,87 @@
+---
+- name: Deploy Proxmox VE
+  hosts: proxmox
+  become: true
+  gather_facts: true
+  vars:
+    username: "{{ lookup('env', 'HOMELAB_USER') }}"
+    create_user: false
+  tasks:
+    - name: Ensure sudo is installed
+      ansible.builtin.apt:
+        name: sudo
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Ensure user '{{ username }}' exists
+      ansible.builtin.user:
+        name: "{{ username }}"
+        shell: /bin/bash
+        state: present
+        groups: sudo
+      when: create_user | default(false)
+
+    - name: Configure passwordless sudo for user
+      ansible.builtin.lineinfile:
+        path: "/etc/sudoers.d/{{ username }}"
+        line: "{{ username }} ALL=(ALL) NOPASSWD:ALL"
+        create: true
+        state: present
+        mode: "0440"
+      become: true
+
+    - name: Ensure .ssh directory exists for user
+      ansible.builtin.file:
+        path: "/home/{{ username }}/.ssh"
+        state: directory
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: "0700"
+      become: true
+      become_user: "{{ username }}"
+
+    - name: Generate SSH key for user if not exists
+      ansible.builtin.openssh_keypair:
+        path: "/home/{{ username }}/.ssh/id_ed25519"
+        type: ed25519
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: "0600"
+      become: true
+      become_user: "{{ username }}"
+
+    - name: Fetch GitHub user public keys
+      ansible.builtin.uri:
+        url: "https://github.com/{{ username }}.keys"
+        return_content: true
+      register: github_keys
+
+    - name: Add GitHub public keys to authorized_keys
+      ansible.builtin.lineinfile:
+        path: "/home/{{ username }}/.ssh/authorized_keys"
+        line: "{{ item }}"
+        create: true
+        state: present
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: "0600"
+      loop: "{{ github_keys.content.splitlines() }}"
+      when: github_keys.content is defined
+
+    - name: Install bat
+      ansible.builtin.apt:
+        name: bat
+        state: present
+      when: ansible_os_family == 'Debian'
+      become: true
+
+  roles:
+    - role: common
+      vars:
+        virtualization_type: type1
+        install_starship: true
+        install_brew: true
+        install_dev_tools: false
+    - role: netbird
+      vars:
+        netbird_auth_token: '{{ lookup("env", "NETBIRD_HOMELAB_KEY") }}'

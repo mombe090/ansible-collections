@@ -2,21 +2,23 @@
   ansible.builtin.command:
     cmd: stow .
   args:
-    chdir: "/home/{{ ansible_user }}/dotfiles"
+    chdir: "~/dotfiles"
   become_user: "{{ ansible_user }}"
 
 - name: Ensure Homebrew is in PATH for zsh
   ansible.builtin.lineinfile:
-    path: "/home/{{ ansible_user }}/.zshrc"
+    path: "~/.zshrc"
     line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
     state: present
   become_user: "{{ ansible_user }}"
+  when: install_brew == true
 
 - name: Ensure Import .zshrc_user file is imported in .zshrc file
   ansible.builtin.lineinfile:
-    path: "/home/{{ ansible_user }}/.zshrc"
+    path: "~/.zshrc"
     line: "[[ -f ~/.zshrc_user ]] && source ~/.zshrc_user"
     state: present
+    create: true
   become_user: "{{ ansible_user }}"
 
 - name: Change user's default shell

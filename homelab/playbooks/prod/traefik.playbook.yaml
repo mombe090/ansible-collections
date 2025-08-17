@@ -1,0 +1,67 @@
+- name: Install Traefik Proxy
+  hosts: proxy.prod.home.mombesoft.com
+  gather_facts: true
+  become: true
+  vars:
+    domain: "{{ lookup('env', 'HOMELAB_DOMAIN_PROD') }}"
+    initialization: false
+  roles:
+    - role: traefik
+      vars:
+        project: '{{ lookup("env", "PROJECT_NAME") | default("ansible-collections") }}'
+        services:
+          - name: dns
+            hostname: dns.{{ domain }}
+            ip: 192.168.10.111
+            port: 80
+            protocol: http
+          - name: dns-mac
+            hostname: dns-mac.{{ domain }}
+            ip: 192.168.10.250
+            port: 80
+            protocol: http
+          - name: pve1
+            hostname: pve1.{{ domain }}
+            ip: 192.168.10.10
+            port: 8006
+            protocol: https
+          - name: pve2
+            hostname: pve2.{{ domain }}
+            ip: 192.168.10.11
+            port: 8006
+            protocol: https
+          - name: pve3
+            hostname: pve3.{{ domain }}
+            ip: 192.168.10.12
+            port: 8006
+            protocol: https
+
+        cloudflare_email: '{{ lookup("env", "CLOUD_FLARE_HOME_EMAIL") }}'
+        cloudflare_api_key: '{{ lookup("env", "CLOUDFLARE_HOME_API_TOKEN_PROD") }}'
+        cloudflare_ca_server: https://acme-v02.api.letsencrypt.org/directory
+        #cloudflare_ca_server: https://acme-staging-v02.api.letsencrypt.org/directory
+
+        #generate password with 'htpasswd -nb user password'
+        traefik_dashboard_credentials: '{{ lookup("env", "TRAEFIK_DASHBOARD_CREDENTIALS") }}'
+        traefik_labels:
+          - traefik.enable=true
+          - traefik.http.routers.traefik.entrypoints=http
+          - traefik.http.routers.traefik.rule=Host(`proxy.{{ domain }}`)
+          - traefik.http.middlewares.traefik-auth.basicauth.users={{ lookup("env", "TRAEFIK_DASHBOARD_CREDENTIALS") }}
+          - traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https
+          - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
+          - traefik.http.routers.traefik.middlewares=traefik-https-redirect
+          - traefik.http.routers.traefik-secure.entrypoints=https
+          - traefik.http.routers.traefik-secure.rule=Host(`proxy.{{ domain }}`)
+          - traefik.http.routers.traefik-secure.middlewares=traefik-auth
+          - traefik.http.routers.traefik-secure.tls=true
+          - traefik.http.routers.traefik-secure.tls.certresolver=cloudflare
+          - traefik.http.routers.traefik-secure.tls.domains[0].main={{ domain }}
+          - traefik.http.routers.traefik-secure.tls.domains[0].sans=*.{{ domain }}
+          - traefik.http.routers.traefik-secure.service=api@internal
+        n8n_labels:
+          - "traefik.enable=true"
+          - "traefik.http.routers.n8n.rule=Host(`n8n.{{ domain }}`)"
+          - "traefik.http.routers.n8n.entrypoints=https"
+          - "traefik.http.routers.n8n.tls=true"
+          - "traefik.http.services.n8n.loadbalancer.server.port=5678"

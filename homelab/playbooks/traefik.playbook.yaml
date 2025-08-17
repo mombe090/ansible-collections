@@ -3,7 +3,7 @@
   gather_facts: true
   become: true
   roles:
-    - name: traefik
+    - role: traefik
       vars:
         project: '{{ lookup("env", "PROJECT_NAME") | default("ansible-collections") }}'
         services:
@@ -32,16 +32,32 @@
             ip: 192.168.10.100
             port: 80
             protocol: http
-          - name: pve
-            hostname: pve.{{ domain }}
+          - name: pve-dev
+            hostname: pve.dev.{{ domain }}
             ip: 192.168.10.253
             port: 8006
             protocol: https
-          - name: pve2
-            hostname: pve2.{{ domain }}
+          - name: pve2-dev
+            hostname: pve2.dev.{{ domain }}
             ip: 192.168.10.252
             port: 8006
             protocol: https
+          - name: pve1-prod
+            hostname: pve1.prod.{{ domain }}
+            ip: 192.168.10.10
+            port: 8006
+            protocol: https
+          - name: pve2-prod
+            hostname: pve2.prod.{{ domain }}
+            ip: 192.168.10.11
+            port: 8006
+            protocol: https
+          - name: pve3-prod
+            hostname: pve3.prod.{{ domain }}
+            ip: 192.168.10.12
+            port: 8006
+            protocol: https
+
 
         cloudflare_email: '{{ lookup("env", "CLOUD_FLARE_HOME_EMAIL") }}'
         cloudflare_api_key: '{{ lookup("env", "CLOUD_FLARE_HOME_API_TOKEN") }}'

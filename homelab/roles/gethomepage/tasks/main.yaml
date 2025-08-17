@@ -18,6 +18,7 @@
     - "settings.yaml"
     - "services.yaml"
     - "widgets.yaml"
+    - "bookmarks.yaml"
 
 - name: Deploy homepage docker compose file
   become: true

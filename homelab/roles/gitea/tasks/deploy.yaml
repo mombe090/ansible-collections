@@ -1,0 +1,76 @@
+- name: Gitea deployment with Docker Compose
+  block:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - postgres_host is defined
+          - postgres_port is defined
+          - username is defined
+          - password is defined
+          - gitea_dir is defined
+        fail_msg: "Required variables (postgres_host, postgres_port, username, password, gitea_dir) must be defined"
+
+    - name: Create secure gitea directory structure
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+        owner: "1000"
+        group: "1000"
+      loop:
+        - "{{ gitea_dir }}"
+        - "{{ gitea_dir }}/data"
+        - "{{ gitea_dir }}/data/gitea"
+        - "{{ gitea_dir }}/data/gitea/conf"
+        - "{{ gitea_dir }}/custom/css"
+
+    - name: Deploy compose configuration
+      ansible.builtin.template:
+        src: compose.yaml.j2
+        dest: "{{ gitea_dir }}/compose.yaml"
+        backup: true
+        mode: "0640"
+      notify:
+        - restart gitea
+
+    - name: Deploy environment file
+      ansible.builtin.template:
+        src: .env.j2
+        dest: "{{ gitea_dir }}/.env"
+        mode: "0600"
+      notify:
+        - restart gitea
+      no_log: true
+
+    - name: Copy custom catpuccin Themes
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ gitea_dir }}/custom/css/"
+        owner: "1000"
+        group: "1000"
+        mode: "0644"
+      loop:
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-blue-auto.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-frappe-blue.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-frappe-sky.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-latte-blue.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-latte-sky.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-macchiato-blue.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-macchiato-sky.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-mocha-blue.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-mocha-sky.css"
+        - "{{ role_path }}/files/catppuccin-gitea/theme-catppuccin-sky-auto.css"
+
+      notify:
+        - restart gitea
+
+    - name: Initial deployment (if no changes)
+      community.docker.docker_compose_v2:
+        project_src: "{{ gitea_dir }}"
+        state: present
+        recreate: never
+      when: not (ansible_handlers_notified | default([]) | intersect(['restart gitea']))
+
+  become: true
+  tags: [gitea]
+  when: gitea_enabled | default(true)

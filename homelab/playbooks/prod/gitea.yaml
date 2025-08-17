@@ -1,0 +1,16 @@
+---
+- name: Deploy gitea
+  hosts:
+    - proxy.prod.home.mombesoft.com
+  gather_facts: true
+  become: true
+  vars:
+    domain: "{{ lookup('env', 'HOMELAB_DOMAIN_PROD') }}"
+  roles:
+    - name: gitea
+      vars:
+        postgres_host: "{{ lookup('env', 'POSTGRES_HOST') | default('postgresql') }}"
+        postgres_port: "{{ lookup('env', 'POSTGRES_PORT') | default(5432) }}"
+        postgres_db: "{{ lookup('env', 'POSTGRES_DB') | default('gitea') }}"
+        username: "{{ lookup('env', 'POSTGRES_USER') | default('gitea') }}"
+        password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"

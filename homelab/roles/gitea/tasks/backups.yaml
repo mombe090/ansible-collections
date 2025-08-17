@@ -1,0 +1,105 @@
+---
+- name: Gitea backup management with remote PostgreSQL
+  block:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - gitea_dir is defined
+          - postgres_host is defined
+          - postgres_user is defined
+          - postgres_password is defined
+        fail_msg: "Required variables (gitea_dir, postgres_host, postgres_user, postgres_password) must be defined"
+
+    - name: Create backup directory on host
+      ansible.builtin.file:
+        path: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}"
+        state: directory
+        mode: "0755"
+        owner: "1000"
+        group: "1000"
+
+    - name: Create PostgreSQL backup using docker run
+      ansible.builtin.shell: |
+        docker run --rm \
+          --network proxy \
+          -v "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}:/backups" \
+          -e PGPASSWORD="{{ postgres_password }}" \
+          postgres:17.5 \
+          pg_dump \
+          -h {{ postgres_host }} \
+          -p {{ postgres_port | default('5432') }} \
+          -U {{ postgres_user }} \
+          -d {{ gitea_db_name | default('gitea') }} \
+          --no-password \
+          --verbose \
+          --format=custom \
+          --file=/backups/gitea-db-{{ ansible_date_time.epoch }}.dump
+      register: postgres_backup_result
+      args:
+        creates: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-db-{{ ansible_date_time.epoch }}.dump"
+
+    - name: Ensure backup directory exists in gitea container
+      community.docker.docker_container_exec:
+        container: gitea
+        command: mkdir -p /data/backups
+        user: git
+
+    - name: Create Gitea application backup
+      community.docker.docker_container_exec:
+        container: gitea
+        command: >
+          gitea dump
+          --config /data/gitea/conf/app.ini
+          --file /data/backups/gitea-app-{{ ansible_date_time.epoch }}.zip
+          --type zip
+          --skip-db
+        chdir: /data
+        user: git
+      register: gitea_backup_result
+
+    - name: Create combined backup archive
+      ansible.builtin.archive:
+        path:
+          - "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-app-{{ ansible_date_time.epoch }}.zip"
+          - "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-db-{{ ansible_date_time.epoch }}.dump"
+        dest: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}/gitea-complete-{{ ansible_date_time.epoch }}.tar.gz"
+        format: gz
+        owner: "1000"
+        group: "1000"
+        mode: "0644"
+
+    - name: Display backup results
+      ansible.builtin.debug:
+        msg:
+          - "PostgreSQL backup: {{ 'Completed successfully' if postgres_backup_result.rc == 0 else 'Failed with error' }}"
+          - "Gitea backup: {{ gitea_backup_result.stdout }}"
+          - "Complete backup created: gitea-complete-{{ ansible_date_time.epoch }}.tar.gz"
+
+    - name: Find old backup files (older than retention days)
+      ansible.builtin.find:
+        paths: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}"
+        patterns:
+          - "gitea-complete-*.tar.gz"
+          - "gitea-app-*.zip"
+          - "gitea-db-*.dump"
+        age: "{{ gitea_backup_retention_days | default(30) }}d"
+      register: old_backups
+
+    - name: Remove old backups
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ old_backups.files }}"
+      when: gitea_backup_cleanup | default(true)
+
+  rescue:
+    - name: Display error message
+      ansible.builtin.debug:
+        msg: "Backup failed. Check PostgreSQL connectivity to {{ postgres_host }}:{{ postgres_port | default('5432') }}"
+
+    - name: Fail the task
+      ansible.builtin.fail:
+        msg: "PostgreSQL backup failed"
+
+  become: true
+  tags: [gitea, backup, postgres]

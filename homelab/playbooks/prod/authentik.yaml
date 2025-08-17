@@ -1,0 +1,23 @@
+---
+- name: Deploy authentik
+  hosts:
+    - proxy.prod.home.mombesoft.com
+  gather_facts: true
+  become: true
+  vars:
+    domain: "{{ lookup('env', 'HOMELAB_DOMAIN_PROD') }}"
+    initialization: false
+  roles:
+    - name: authentik
+      vars:
+        pg_host: "{{ lookup('env', 'POSTGRES_HOST') | default('postgresql') }}"
+        pg_pass: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
+        authentik_secret_key: "{{ lookup('env', 'AUTHENTIK_SECRET_KEY') }}"
+        authentik_dir: "/opt/authentik"
+
+        authentik_labels:
+          - "traefik.enable=true"
+          - "traefik.http.routers.authentik.rule=Host(`authentik.{{ domain }}`)"
+          - "traefik.http.routers.authentik.entrypoints=https"
+          - "traefik.http.routers.authentik.tls=true"
+          - "traefik.http.services.authentik.loadbalancer.server.port=9000"

@@ -1,0 +1,15 @@
+services:
+
+  {{ postgres_compose_service_name | default('db') }}:
+    image: postgres:{{ postgres_version | default('latest') }}
+    restart: unless-stopped
+    container_name: {{postgres_container_name | default('postgres')}}
+    ports:
+      - "{{ postgres_port | default(5432) }}:5432"
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./data:/var/lib/postgresql/data

@@ -9,7 +9,10 @@ dependencies:
     vars:
       pip_install_packages:
         - name: docker
+    when: initialization == true | default(false)
+
   - role: "geerlingguy.docker"
     vars:
       docker_users:
-        - "{{ ansible_user }}"
+        - '{{ ansible_user }}'
+    when: initialization == true | default(false)

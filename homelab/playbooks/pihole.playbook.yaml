@@ -1,9 +1,7 @@
 ---
 - name: Install DNS server with Pihole and Cloudflared
   hosts:
-    - dns-principal
-    #- dns
-    #- dns2
+    - dns
   gather_facts: true
   become: true
   vars:
@@ -14,22 +12,27 @@
         project: '{{ lookup("env", "PROJECT_NAME") }}'
         dns_hosts:
           - 192.168.10.1 router
-          - 192.168.10.253 pve
-          - 192.168.10.253 pve2
           - 192.168.10.2 truenas-srv.{{ domain }}
           - 192.168.10.3 pbs-srv.{{ domain }}
           - 192.168.10.5 {{ proxy_host }}
-          - 192.168.10.250 principal-dns.{{ domain }}
-          - 192.168.10.200 secondary-dns.{{ domain }}
-          - 192.168.10.200 tertiary-dns.{{ domain }}
+          - 192.168.10.10 pve-prod1
+          - 192.168.10.11 pve-prod2
+          - 192.168.10.12 pve-prod3
+          - 192.168.10.111 dns.{{ domain }}
+          - 192.168.10.250 primary-dns{{ domain }} # vm on macbook
+          - 192.168.10.253 pve
+          - 192.168.10.252 pve2
+
         cnameRecords:
+          - dns-dev.{{ domain }},{{ proxy_host }}
+          - dns-prod.{{ domain }},{{ proxy_host }}
           - homepage.{{ domain }},{{ proxy_host }}
-          - truenas.{{ domain }},{{ proxy_host }}
+          - n8n.{{ domain }},{{ proxy_host }}
           - nas.{{ domain }},{{ proxy_host }}
           - pbs.{{ domain }},{{ proxy_host }}
-          - dns.{{ domain }},{{ proxy_host }}
-          - dns2.{{ domain }},{{ proxy_host }}
-          - dns3.{{ domain }},{{ proxy_host }}
-          - pve.{{ domain }},{{ proxy_host }}
-          - pve2.{{ domain }},{{ proxy_host }}
-          - n8n.{{ domain }},{{ proxy_host }}
+          - pve.dev.{{ domain }},{{ proxy_host }}
+          - pve2.dev.{{ domain }},{{ proxy_host }}
+          - pve1.prod.{{ domain }},{{ proxy_host }}
+          - pve2.prod.{{ domain }},{{ proxy_host }}
+          - pve3.prod.{{ domain }},{{ proxy_host }}
+          - truenas.{{ domain }},{{ proxy_host }}
