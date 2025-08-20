@@ -34,6 +34,15 @@
             username:  "{{ proxmox_token }}"
             password:  "{{ proxmox_secret }}"
             node: pve-prod3
+    - PBS:
+        icon: proxmox.svg
+        href: "https://pbs.{{ domain }}"
+        description: "Proxmox Backup Server (PBS) "
+        widget:
+            type: proxmoxbackupserver
+            url: "https://pbs.{{ domain }}"
+            username:  "{{ lookup('env', 'PROXMOX_PBS_HOMEPAGE_USERNAME') }}"
+            password:  "{{ lookup('env', 'PROXMOX_PBS_HOMEPAGE_PASSWORD') }}"
 
 - proxmox-dev:
     - PVE1:

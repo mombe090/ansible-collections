@@ -35,6 +35,11 @@
             ip: 192.168.10.12
             port: 8006
             protocol: https
+          - name: pbs
+            hostname: pbs.{{ domain }}
+            ip: 192.168.10.30
+            port: 8007
+            protocol: https
 
         cloudflare_email: '{{ lookup("env", "CLOUD_FLARE_HOME_EMAIL") }}'
         cloudflare_api_key: '{{ lookup("env", "CLOUDFLARE_HOME_API_TOKEN_PROD") }}'

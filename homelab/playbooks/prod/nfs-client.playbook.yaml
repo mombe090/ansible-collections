@@ -20,6 +20,16 @@
         owner: root
         group: root
         mode: "0755"
+      - server: "192.168.10.30" # pbs-host
+        path: "/mnt/pbs/backups/vms"
+        mount_point: "/mnt/backups/vms"
+        fstype: "nfs4"
+        options: "defaults,nfsvers=4,rsize=8192,wsize=8192,timeo=14,soft"
+        state: "mounted"
+        persistent: true
+        owner: root
+        group: root
+        mode: "0755"
 
     # Client configuration
     nfs_client_domain: "{{ lookup('env', 'HOMELAB_DOMAIN_PROD') | default('home.mombesoft.com') }}"
