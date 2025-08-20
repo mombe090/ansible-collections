@@ -1,0 +1,38 @@
+- name: Ensure all required folders for n8s is created
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ traefik_dir }}/composes/n8n"
+    - "{{ traefik_dir }}/composes/n8n/data"
+    - "{{ traefik_dir }}/composes/n8n/local-files"
+
+- name: Copy n8n compose template file
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  become: true
+  loop:
+    - {
+        src: "{{ role_path }}/templates/compose_files/n8n.yaml.j2",
+        dest: "{{ traefik_dir }}/composes/n8n/compose.yaml",
+      }
+
+- name: Ensure n8n data volume is created
+  community.docker.docker_volume:
+    name: n8n_data
+    state: present
+
+- name: Tear down existing services
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_dir }}/composes/n8n"
+    state: absent
+    remove_orphans: true
+  become_user: "{{ ansible_user }}"
+
+- name: Ensure Traefik is running
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_dir }}/composes/n8n"
+    state: present
+  become_user: "{{ ansible_user }}"

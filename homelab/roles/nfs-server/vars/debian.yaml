@@ -1,0 +1,12 @@
+---
+# Debian/Ubuntu specific variables
+
+nfs_server_packages:
+  - nfs-kernel-server
+  - nfs-common
+  - rpcbind
+
+nfs_server_service: nfs-kernel-server
+nfs_rpcbind_service: rpcbind
+nfs_idmap_service: nfs-idmapd
+nfs_lock_service: nfs-lock

@@ -1,0 +1,167 @@
+---
+# Main tasks for NFS client role
+
+- name: Gather facts if not already gathered
+  ansible.builtin.setup:
+  when: ansible_os_family is not defined
+
+- name: Include OS-specific variables (Debian/Ubuntu)
+  ansible.builtin.include_vars: "debian.yaml"
+  when: ansible_os_family == "Debian"
+
+- name: Include OS-specific variables (RedHat/CentOS/Rocky)
+  ansible.builtin.include_vars: "redhat.yaml"
+  when: ansible_os_family == "RedHat"
+
+- name: Debug OS family for troubleshooting
+  ansible.builtin.debug:
+    msg: "Detected OS family: {{ ansible_os_family | default('undefined') }}, Distribution: {{ ansible_distribution | default('undefined') }}"
+
+- name: Install NFS client packages
+  ansible.builtin.package:
+    name: "{{ nfs_client_packages }}"
+    state: present
+  become: true
+
+- name: Configure NFS client domain
+  ansible.builtin.lineinfile:
+    path: /etc/idmapd.conf
+    regexp: '^#?\s*Domain\s*='
+    line: "Domain = {{ nfs_client_domain }}"
+    backup: "{{ nfs_backup_fstab }}"
+    create: true
+  become: true
+  notify: restart nfs idmap client
+  when: nfs_client_domain is defined
+
+- name: Start and enable NFS client services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: "{{ nfs_client_services_enabled }}"
+  loop: "{{ nfs_client_services }}"
+  become: true
+  when:
+    - nfs_manage_services
+    - nfs_client_services is defined
+
+- name: Create NFS mount point directories
+  ansible.builtin.file:
+    path: "{{ item.mount_point }}"
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ nfs_mounts }}"
+  become: true
+  when:
+    - nfs_create_mount_dirs
+    - item.state | default('mounted') != 'absent'
+
+- name: Remove mount point directories for absent mounts
+  ansible.builtin.file:
+    path: "{{ item.mount_point }}"
+    state: absent
+  loop: "{{ nfs_mounts }}"
+  become: true
+  when:
+    - item.state | default('mounted') == 'absent'
+
+- name: Check if NFS share is already mounted
+  ansible.builtin.command: mountpoint -q {{ item.mount_point }}
+  loop: "{{ nfs_mounts }}"
+  register: mount_check
+  changed_when: false
+  failed_when: false
+
+- name: Add NFS mount to /etc/fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: "{{ item.server }}:{{ item.path }} {{ item.mount_point }} {{ item.fstype | default('nfs') }} {{ item.options | default(nfs_default_mount_options) }} 0 0"
+    state: present
+    backup: true
+  loop: "{{ nfs_mounts }}"
+  become: true
+  when:
+    - item.persistent | default(true)
+    - item.state | default('mounted') != 'absent'
+
+- name: Mount NFS shares using shell
+  ansible.builtin.shell: |
+    if ! mountpoint -q {{ item.mount_point }}; then
+      mount -t {{ item.fstype | default('nfs') }} -o {{ item.options | default(nfs_default_mount_options) }} {{ item.server }}:{{ item.path }} {{ item.mount_point }}
+    fi
+  loop: "{{ nfs_mounts }}"
+  become: true
+  register: nfs_mount_results
+  when: item.state | default('mounted') == 'mounted'
+
+- name: Unmount NFS shares
+  ansible.builtin.shell: |
+    if mountpoint -q {{ item.mount_point }}; then
+      umount {{ item.mount_point }}
+    fi
+  loop: "{{ nfs_mounts }}"
+  become: true
+  when: item.state | default('mounted') == 'unmounted'
+
+- name: Remove NFS mount from /etc/fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "^{{ item.server | regex_escape }}:{{ item.path | regex_escape }}\\s+{{ item.mount_point | regex_escape }}\\s+"
+    state: absent
+    backup: true
+  loop: "{{ nfs_mounts }}"
+  become: true
+  when:
+    - not (item.persistent | default(true))
+    - item.state | default('mounted') == 'unmounted'
+
+- name: Wait for mounts to be available
+  ansible.builtin.wait_for:
+    path: "{{ item.mount_point }}"
+    state: present
+    timeout: "{{ nfs_mount_check_timeout }}"
+  loop: "{{ nfs_mounts }}"
+  when:
+    - nfs_validate_mounts
+    - item.state | default('mounted') == 'mounted'
+  ignore_errors: true
+
+- name: Verify NFS mounts
+  ansible.builtin.command: "mountpoint -q {{ item.mount_point }}"
+  loop: "{{ nfs_mounts }}"
+  register: mount_check
+  changed_when: false
+  failed_when: false
+  when:
+    - nfs_validate_mounts
+    - item.state | default('mounted') == 'mounted'
+
+- name: Display mount verification results
+  ansible.builtin.debug:
+    msg: "Mount {{ item.item.mount_point }}: {{ 'SUCCESS' if item.rc == 0 else 'FAILED' }}"
+  loop: "{{ mount_check.results | default([]) }}"
+  when:
+    - nfs_validate_mounts
+    - item.item.state | default('mounted') == 'mounted'
+
+- name: Get current NFS mounts
+  ansible.builtin.command: mount -t nfs,nfs4
+  register: current_nfs_mounts
+  changed_when: false
+  failed_when: false
+
+- name: Display current NFS mounts
+  ansible.builtin.debug:
+    msg: "Current NFS mounts: {{ current_nfs_mounts.stdout_lines | default([]) }}"
+  when: current_nfs_mounts.rc == 0
+
+- name: Deploy NFS client validation script
+  ansible.builtin.copy:
+    src: nfs-client-validate.sh
+    dest: /usr/local/bin/nfs-client-validate.sh
+    mode: "0755"
+    owner: root
+    group: root
+  become: true

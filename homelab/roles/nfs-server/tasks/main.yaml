@@ -1,0 +1,222 @@
+---
+# Main tasks for NFS server role
+
+- name: Gather facts if not already gathered
+  ansible.builtin.setup:
+  when: ansible_os_family is not defined
+
+- name: Include OS-specific variables (Debian/Ubuntu)
+  ansible.builtin.include_vars: "debian.yaml"
+  when: ansible_os_family == "Debian"
+
+- name: Include OS-specific variables (RedHat/CentOS/Rocky)
+  ansible.builtin.include_vars: "redhat.yaml"
+  when: ansible_os_family == "RedHat"
+
+- name: Debug OS family for troubleshooting
+  ansible.builtin.debug:
+    msg: "Detected OS family: {{ ansible_os_family | default('undefined') }}, Distribution: {{ ansible_distribution | default('undefined') }}"
+
+- name: Install NFS server packages
+  ansible.builtin.package:
+    name: "{{ nfs_server_packages }}"
+    state: present
+  become: true
+
+- name: Ensure rpcbind service is started and enabled
+  ansible.builtin.service:
+    name: "{{ nfs_rpcbind_service }}"
+    state: started
+    enabled: "{{ nfs_rpcbind_enabled }}"
+  become: true
+  when: nfs_rpcbind_enabled
+
+- name: Create NFS export directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ nfs_exports }}"
+  become: true
+  when: nfs_create_export_dirs and nfs_exports | length > 0
+
+- name: Generate /etc/exports file
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports
+    backup: "{{ nfs_backup_exports }}"
+    mode: "0644"
+  become: true
+  notify:
+    - reload nfs exports
+    - restart nfs server
+  when: nfs_exports | length > 0
+
+- name: Ensure /etc/exports exists (empty if no exports)
+  ansible.builtin.file:
+    path: /etc/exports
+    state: touch
+    mode: "0644"
+  become: true
+  when: nfs_exports | length == 0
+
+- name: Configure NFS server options
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    backup: true
+    mode: "0644"
+  loop:
+    - src: nfs.conf.j2
+      dest: /etc/nfs.conf
+    - src: idmapd.conf.j2
+      dest: /etc/idmapd.conf
+  become: true
+  notify: restart nfs server
+  when: ansible_os_family == "RedHat" or ansible_os_family == "Debian"
+
+- name: Check if UFW is available (Ubuntu/Debian)
+  ansible.builtin.command: which ufw
+  register: ufw_check
+  failed_when: false
+  changed_when: false
+  when:
+    - nfs_configure_firewall
+    - ansible_os_family == "Debian"
+
+- name: Set UFW availability fact
+  ansible.builtin.set_fact:
+    ufw_available: "{{ (ufw_check.rc | default(1)) == 0 }}"
+  when:
+    - nfs_configure_firewall
+    - ansible_os_family == "Debian"
+
+- name: Configure firewall for NFS (UFW - Ubuntu/Debian)
+  ansible.builtin.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+    src: "{{ nfs_allowed_networks | join(',') }}"
+  loop: "{{ nfs_ports }}"
+  become: true
+  when:
+    - nfs_configure_firewall
+    - ansible_os_family == "Debian"
+    - ufw_available | default(false)
+
+- name: Configure firewall for NFS (iptables - fallback for Debian without UFW)
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ item }}"
+    source: "{{ nfs_allowed_networks | first }}"
+    jump: ACCEPT
+    comment: "Allow NFS traffic on port {{ item }}"
+  loop: "{{ nfs_ports }}"
+  become: true
+  when:
+    - nfs_configure_firewall
+    - ansible_os_family == "Debian"
+    - not (ufw_available | default(false))
+  ignore_errors: true
+
+- name: Configure firewall for NFS (firewalld - CentOS/RHEL)
+  ansible.posix.firewalld:
+    service: nfs
+    permanent: true
+    state: enabled
+    immediate: true
+    source: "{{ item }}"
+  loop: "{{ nfs_allowed_networks }}"
+  become: true
+  when:
+    - nfs_configure_firewall
+    - ansible_os_family == "RedHat"
+
+- name: Configure firewall for rpcbind (firewalld - CentOS/RHEL)
+  ansible.posix.firewalld:
+    service: rpc-bind
+    permanent: true
+    state: enabled
+    immediate: true
+    source: "{{ item }}"
+  loop: "{{ nfs_allowed_networks }}"
+  become: true
+  when:
+    - nfs_configure_firewall
+    - ansible_os_family == "RedHat"
+
+- name: Start and enable NFS server service
+  ansible.builtin.service:
+    name: "{{ nfs_server_service }}"
+    state: "{{ nfs_server_state }}"
+    enabled: "{{ nfs_server_enabled }}"
+  become: true
+  ignore_errors: true
+  register: nfs_service_result
+
+- name: Check available NFS services if main service failed
+  ansible.builtin.shell: systemctl list-units --type=service | grep -i nfs
+  register: nfs_services_check
+  when: nfs_service_result.failed | default(false)
+  ignore_errors: true
+
+- name: Debug available NFS services
+  ansible.builtin.debug:
+    msg: "Available NFS services: {{ nfs_services_check.stdout_lines | default([]) }}"
+  when: nfs_service_result.failed | default(false)
+
+- name: Try alternative NFS service names
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: "{{ nfs_server_state }}"
+    enabled: "{{ nfs_server_enabled }}"
+  become: true
+  loop:
+    - nfs-server
+    - nfsd
+    - nfs
+  when: nfs_service_result.failed | default(false)
+  ignore_errors: true
+
+- name: Start and enable NFS lock service (if exists)
+  ansible.builtin.service:
+    name: "{{ nfs_lock_service }}"
+    state: started
+    enabled: true
+  become: true
+  when: nfs_lock_service is defined
+  ignore_errors: true
+
+- name: Start and enable NFS idmap service
+  ansible.builtin.service:
+    name: "{{ nfs_idmap_service }}"
+    state: started
+    enabled: "{{ nfs_idmapd_enabled }}"
+  become: true
+  when:
+    - nfs_idmapd_enabled
+    - nfs_idmap_service is defined
+
+- name: Verify NFS server is running
+  ansible.builtin.command: showmount -e localhost
+  register: nfs_showmount
+  changed_when: false
+  failed_when: false
+  become: true
+
+- name: Display NFS exports
+  ansible.builtin.debug:
+    msg: "NFS exports: {{ nfs_showmount.stdout_lines }}"
+  when: nfs_showmount.rc == 0 and nfs_exports | length > 0
+
+- name: Deploy NFS server validation script
+  ansible.builtin.copy:
+    src: nfs-server-validate.sh
+    dest: /usr/local/bin/nfs-server-validate.sh
+    mode: "0755"
+    owner: root
+    group: root
+  become: true

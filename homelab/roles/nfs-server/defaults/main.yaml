@@ -1,0 +1,68 @@
+---
+# Default variables for NFS server role
+
+# NFS service configuration
+nfs_server_enabled: true
+nfs_server_state: started
+
+# NFS exports configuration
+# Example:
+# nfs_exports:
+#   - path: /srv/nfs/shared
+#     hosts: "192.168.1.0/24"
+#     options: "rw,sync,no_subtree_check,no_root_squash"
+#     owner: root
+#     group: root
+#     mode: "0755"
+#   - path: /srv/nfs/data
+#     hosts: "192.168.1.100"
+#     options: "rw,sync,no_subtree_check,root_squash"
+#     owner: nfsnobody
+#     group: nfsnobody
+#     mode: "0755"
+nfs_exports: []
+
+# Firewall configuration (disabled by default for compatibility)
+nfs_configure_firewall: false
+nfs_allowed_networks:
+  - "192.168.1.0/24"
+
+# NFS ports (default ports for firewall rules)
+nfs_ports:
+  - 111 # rpcbind
+  - 2049 # nfsd
+  - 20048 # mountd (fixed port)
+
+# Security and performance settings
+nfs_rpcbind_enabled: true
+nfs_idmapd_enabled: true
+
+# Create export directories if they don't exist
+nfs_create_export_dirs: true
+
+# Backup exports file before changes
+nfs_backup_exports: true
+
+# NFS version support
+nfs_versions:
+  - "3"
+  - "4"
+  - "4.1"
+  - "4.2"
+
+# Default export options (applied when not specified)
+nfs_default_export_options: "rw,sync,no_subtree_check,root_squash"
+
+# Service restart policy
+nfs_restart_on_change: true
+
+# Fallback OS-specific variables (will be overridden by vars/{{ ansible_os_family | lower }}.yaml)
+nfs_server_packages:
+  - nfs-kernel-server # Debian/Ubuntu default
+  - nfs-common
+  - rpcbind
+
+nfs_server_service: nfs-kernel-server # Debian/Ubuntu default
+nfs_rpcbind_service: rpcbind
+nfs_idmap_service: nfs-idmapd
+nfs_lock_service: nfs-lock

@@ -1,0 +1,43 @@
+---
+- name: Configure NFS Server
+  hosts: nfs_servers
+  gather_facts: true
+  become: true
+
+  vars:
+    # NFS exports configuration
+    nfs_exports:
+      - path: /mnt/pve/backups/vms
+        hosts: "192.168.10.0/24"
+        options: "rw,sync,no_subtree_check,root_squash"
+        owner: root
+        group: root
+        mode: "0755"
+
+    # Firewall configuration
+    nfs_allowed_networks:
+      - "192.168.10.0/24"
+
+    # Enable all NFS versions
+    nfs_versions:
+      - "3"
+      - "4"
+      - "4.1"
+      - "4.2"
+
+  roles:
+    - nfs-server
+
+  post_tasks:
+    - name: Display configured exports
+      ansible.builtin.debug:
+        msg: "NFS server configured with {{ nfs_exports | length }} exports"
+
+    - name: Show export verification
+      ansible.builtin.command: showmount -e
+      register: showmount_output
+      changed_when: false
+
+    - name: Display exports
+      ansible.builtin.debug:
+        var: showmount_output.stdout_lines
