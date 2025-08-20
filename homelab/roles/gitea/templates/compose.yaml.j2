@@ -17,11 +17,13 @@ services:
       - GITEA__server__ROOT_URL=${GITEA_ROOT_URL}
       - GITEA__server__SSH_DOMAIN=${GITEA_DOMAIN}
       - GITEA__server__DISABLE_SSH=false
+      - GITEA__server__LANDING_PAGE=login
       - GITEA__ui__DEFAULT_THEME=catppuccin-frappe-sky
       - GITEA__ui__THEMES="catppuccin-macchiato-sky,catppuccin-frappe-sky,catppuccin-latte-sky,catppuccin-mocha-sky,catppuccin-teal-auto,catppuccin-frappe-blue,catppuccin-latte-blue,catppuccin-macchiato-blue,catppuccin-mocha-blue,catppuccin-frappe-sky,catppuccin-latte-sky,catppuccin-mocha-sky"
       - GITEA__actions__ENABLED=true
-      - GITEA__actions__DEFAULT_ACTIONS_URL=https://gitea.com
+      - GITEA__actions__DEFAULT_ACTIONS_URL=https://gitea.{{ domain }}
       - GITEA__log__LEVEL=Info
+      - GITEA__openid__ENABLE_OPENID_SIGNIN=false
     networks:
       - proxy
     volumes:

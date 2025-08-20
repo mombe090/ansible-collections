@@ -1,57 +1,33 @@
----
-services:
-  cloudflared:
-    container_name: cloudflared
-    # Restart on crashes and on reboots
-    restart: unless-stopped
-    image: cloudflare/cloudflared:latest
-    command: proxy-dns
-    environment:
-      - "TUNNEL_DNS_UPSTREAM=https://1.1.1.1/dns-query,https://1.0.0.1/dns-query,https://9.9.9.9/dns-query,https://149.112.112.9/dns-query"
-
-      # Listen on an unprivileged port
-      - "TUNNEL_DNS_PORT=5053"
-
-      # Listen on all interfaces
-      - "TUNNEL_DNS_ADDRESS=0.0.0.0"
-
-    # Attach cloudflared only to the private network
-    networks:
-      dns_net:
-        ipv4_address: 172.30.0.80
-    security_opt:
-      - no-new-privileges:true
-
-  pihole:
-    container_name: pihole
-    hostname: pihole
-    image: pihole/pihole:latest
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "67:67/udp"
-      - "80:80/tcp"
-    networks:
-      dns_net:
-        ipv4_address: 172.30.0.3
-    environment:
-      TZ: 'America/Toronto'
-      FTLCONF_webserver_api_password: '${PI_HOLE_ADMIN_PASSWORD}'
-      PIHOLE_DNS_: '172.30.0.80#5053'
-      DNSMASQ_LISTENING: 'all'
-     # VIRTUAL_HOST: dns.home.mombesoft.com
-    volumes:
-      - '{{ pihole_dir }}/pihole.toml:/etc/pihole/pihole.toml'
-    cap_add:
-      - NET_ADMIN
-    restart: unless-stopped
-    depends_on:
-      - cloudflared
-
 networks:
-  dns_net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.30.0.0/16
-    name: dns_net
+  proxy:
+    external: true
+
+volumes:
+  n8n_data:
+    driver: local
+
+services:
+  n8n:
+    image: n8nio/n8n:stable
+    container_name: n8n
+    restart: unless-stopped
+    networks:
+      - proxy
+    ports:
+      - 5678:5678
+    environment:
+      GENERIC_TIMEZONE: America/Toronto
+      TZ: America/Toronto
+      N8N_HOST: "n8n.{{ domain }}"
+      N8N_PORT: 5678
+      NODE_ENV: production
+      N8N_PROTOCOL: https
+      WEBHOOK_URL: "https://n8n.{{ domain }}/"
+      N8N_ENCRYPTION_KEY: "{{ lookup('env', 'N8N_ENCRYPTION_KEY') }}"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - {{ traefik_dir }}/composes/n8n/local-files:/files
+    labels:
+      {% for label in n8n_labels %}
+      - {{ label }}
+      {% endfor %}

@@ -21,6 +21,3 @@
 
 - name: Import Traefik Server Task
   ansible.builtin.include_tasks: traefik_server.yaml
-
-- name: Import n8n Task
-  ansible.builtin.include_tasks: n8n.yaml

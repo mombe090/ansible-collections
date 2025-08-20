@@ -1,46 +1,38 @@
-- name: Disable systemd-resolved DNSStubListener
-  ansible.builtin.shell: |
-    printf "%b  %b Disabling systemd-resolved DNSStubListener" "${OVER}" "${TICK}"
-    sed -r -i.orig 's/#?DNSStubListener=yes/DNSStubListener=no/g' /etc/systemd/resolved.conf
-    systemctl reload-or-restart systemd-resolved
-  become: true
-
-- name: Ensure {{ pihole_dir }} directory exists
+- name: Ensure all required folders for n8s is created
   become: true
   ansible.builtin.file:
-    path: "{{ pihole_dir }}"
+    path: "{{ item }}"
     state: directory
+  loop:
+    - "{{ traefik_dir }}/composes/n8n"
+    - "{{ traefik_dir }}/composes/n8n/data"
+    - "{{ traefik_dir }}/composes/n8n/local-files"
 
-- name: Copy Pihole Config
+- name: Copy n8n compose template file
   ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   become: true
   loop:
     - {
-        src: "{{ role_path }}/templates/compose.yaml.j2",
-        dest: "{{ pihole_dir }}/compose.yaml",
+        src: "{{ role_path }}/templates/compose_files/n8n.yaml.j2",
+        dest: "{{ traefik_dir }}/composes/n8n/compose.yaml",
       }
-    - {
-        src: "{{ role_path }}/templates/pihole.toml.j2",
-        dest: "{{ pihole_dir }}/pihole.toml",
-      }
+
+- name: Ensure n8n data volume is created
+  community.docker.docker_volume:
+    name: n8n_data
+    state: present
 
 - name: Tear down existing services
-  become: true
   community.docker.docker_compose_v2:
-    project_src: "{{ pihole_dir }}"
+    project_src: "{{ traefik_dir }}/composes/n8n"
     state: absent
     remove_orphans: true
+  become_user: "{{ ansible_user }}"
 
-- name: Ensure pihole and update is up and running
-  become: true
+- name: Ensure Traefik is running
   community.docker.docker_compose_v2:
-    project_src: "{{ pihole_dir }}"
-  register: output
-  environment:
-    PI_HOLE_ADMIN_PASSWORD: '{{ lookup("env", "PI_HOLE_ADMIN_PASSWORD") }}'
-
-- name: Show compose output
-  ansible.builtin.debug:
-    var: output
+    project_src: "{{ traefik_dir }}/composes/n8n"
+    state: present
+  become_user: "{{ ansible_user }}"
