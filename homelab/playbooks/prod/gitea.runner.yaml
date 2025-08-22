@@ -1,7 +1,7 @@
 ---
 - name: Deploy Gitea Actions Runner
-  hosts: proxy.prod.home.mombesoft.com
-  become: true
+  hosts: lxc_containers
+  become: false # Already running as root in LXC
   gather_facts: true
   vars:
     domain: '{{ lookup("env", "HOMELAB_DOMAIN_PROD") }}'
@@ -9,8 +9,12 @@
   roles:
     - role: gitea-runner
       vars:
+        # Use binary installation for LXC containers
+        gitea_runner_install_method: "binary"
+        gitea_runner_become: false # Already running as root        uvr ansible-playbook playbooks/prod/gitea.runner.yaml
+        gitea_runner_name: "lxc-{{ inventory_hostname }}"
+        gitea_runner_labels: "self-hosted:host,lxc:host,linux:host"
+        gitea_runner_log_level: "info"
         registration_token: '{{ lookup("env", "GITEA_RUNNER_REGISTRATION_TOKEN_PROD1") }}'
-        gitea_runner_enabled: true
-        gitea_runner_name: "runner-prod1"
-        gitea_runner_labels: "ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host,prod:host"
-      tags: [gitea-runner, runner, actions]
+        gitea_runner_force_registration: true
+        domain: '{{ lookup("env", "HOMELAB_DOMAIN_PROD") }}'

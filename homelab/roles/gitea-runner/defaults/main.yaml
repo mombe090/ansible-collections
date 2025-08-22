@@ -3,14 +3,46 @@ gitea_runner_enabled: true
 gitea_runner_dir: "/opt/gitea-runner"
 gitea_runner_version: "nightly"
 
+# Installation method: 'docker' or 'binary'
+gitea_runner_install_method: "docker"
+
+# Privilege escalation (set to false if already running as root)
+gitea_runner_become: true
+
 # Runner configuration
 gitea_runner_name: '{{ lookup("env", "GITEA_RUNNER_NAME") | default("homelab-runner") }}'
-gitea_runner_labels: '{{ lookup("env", "GITEA_RUNNER_LABELS") | default("ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host") }}'
+gitea_runner_labels: '{{ lookup("env", "GITEA_RUNNER_LABELS") | default(gitea_runner_default_labels) }}'
 gitea_runner_log_level: '{{ lookup("env", "GITEA_RUNNER_LOG_LEVEL") | default("info") }}'
+
+# Default labels based on installation method
+gitea_runner_default_labels: >-
+  {%- if gitea_runner_install_method == 'binary' -%}
+  self-hosted:host,linux:host
+  {%- else -%}
+  ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host
+  {%- endif -%}
 
 # Gitea instance configuration
 gitea_instance_url: "https://gitea.{{ domain }}"
 gitea_runner_registration_token: "{{ registration_token }}"
 
+# Registration options
+gitea_runner_force_registration: false
+
 # Docker configuration
 gitea_force_pull: "missing"
+
+# Binary installation configuration
+gitea_runner_user: "act_runner"
+gitea_runner_group: "act_runner"
+gitea_runner_home: "/var/lib/act_runner"
+gitea_runner_config_file: "{{ gitea_runner_home }}/config.yaml"
+gitea_runner_data_file: "{{ gitea_runner_home }}/.runner"
+
+# Runner performance and behavior configuration
+gitea_runner_capacity: 1
+gitea_runner_timeout: "3h"
+gitea_runner_workdir_parent: ""
+
+# Default architecture (will be detected at runtime)
+gitea_runner_arch: "amd64"
