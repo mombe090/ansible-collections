@@ -32,7 +32,11 @@ galaxy_info:
     - lxc
     - automation
 
-dependencies: []
+dependencies:
+  - role: docker
+    vars:
+      initialization: true
+    when: gitea_runner_install_method == 'binary' and gitea_runner_use_docker_for_jobs | default(true)
 
 collections:
   - community.docker # Required for Docker installation method

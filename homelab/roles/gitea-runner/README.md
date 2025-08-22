@@ -7,9 +7,12 @@ This Ansible role sets up a Gitea Actions runner that can execute workflows for 
 - **Dual Installation Methods**: Choose between Docker-based deployment or native binary installation
 - **Docker Mode**: Runs the act_runner in a Docker container with full Docker-in-Docker support
 - **Binary Mode**: Installs act_runner as a native Linux service with systemd management
+- **Docker Job Execution**: Binary mode can use Docker containers for job execution (recommended)
 - **Automatic Registration**: Handles runner registration with your Gitea instance
 - **Flexible Configuration**: Supports custom labels, runner names, and environment variables
 - **LXC Container Support**: Binary mode is perfect for LXC containers and lightweight Linux environments
+- **Force Registration**: Option to force re-registration of existing runners
+- **Ephemeral Runners**: Support for disposable runners for enhanced security
 
 ## Requirements
 
@@ -89,6 +92,32 @@ For native Linux execution without Docker:
         gitea_runner_labels: "self-hosted:host,linux:host"
 ```
 
+### Binary Mode with Docker Job Execution (Recommended)
+
+For native binary installation that uses Docker containers for job execution:
+
+```yaml
+---
+- name: Deploy Gitea Actions Runner (Binary + Docker Jobs)
+  hosts: linux_hosts
+  become: true
+  vars:
+    domain: "example.com"
+    registration_token: "your-registration-token"
+
+  roles:
+    - role: gitea-runner
+      vars:
+        gitea_runner_install_method: "binary"
+        gitea_runner_use_docker_for_jobs: true
+        domain: "example.com"
+        registration_token: "your-registration-token"
+        gitea_runner_labels: "ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:docker,linux:docker"
+        gitea_runner_docker_network: "bridge"
+        gitea_runner_docker_volumes:
+          - "/var/run/docker.sock:/var/run/docker.sock"
+```
+
 ## Runner Labels
 
 The `gitea_runner_labels` variable determines which workflows the runner can execute:
@@ -126,7 +155,6 @@ gitea_force_pull: "missing"
 ### Binary Mode Variables
 
 ```yaml
-```yaml
 # Binary installation configuration
 gitea_runner_user: "act_runner"
 gitea_runner_group: "act_runner"
@@ -137,9 +165,17 @@ gitea_runner_data_file: "/var/lib/act_runner/.runner"
 # Privilege escalation (set to false if already running as root in LXC)
 gitea_runner_become: true  # Set to false for LXC containers
 
+# Docker for job execution (when using binary installation)
+gitea_runner_use_docker_for_jobs: true  # Use Docker containers for running jobs
+gitea_runner_docker_network: "bridge"   # Docker network for job containers
+gitea_runner_docker_volumes: []         # Additional volumes to mount in job containers
+
+# Force registration and ephemeral options
+gitea_runner_force_registration: false  # Force re-registration of existing runners
+gitea_runner_ephemeral: false          # Enable ephemeral runners for enhanced security
+
 # Default architecture (will be detected at runtime)
 gitea_runner_arch: "amd64"
-```
 ```
 
 ## Installation Methods

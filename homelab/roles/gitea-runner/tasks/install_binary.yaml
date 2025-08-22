@@ -40,12 +40,13 @@
         state: present
       become: "{{ gitea_runner_become | default(true) }}"
 
-    - name: Add runner user to docker group (if docker is available)
+    - name: Add runner user to docker group (if docker is available for job execution)
       ansible.builtin.user:
         name: "{{ gitea_runner_user }}"
         groups: docker
         append: true
       become: "{{ gitea_runner_become | default(true) }}"
+      when: gitea_runner_use_docker_for_jobs | default(true)
       ignore_errors: true # In case docker group doesn't exist
 
     - name: Create runner directories

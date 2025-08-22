@@ -58,7 +58,41 @@ cache:
   external_server: ""
 
 container:
-  # For binary/host-based runners, we disable container execution
+{% if gitea_runner_use_docker_for_jobs | default(true) %}
+  # Docker-based job execution configuration
+  # Specifies the network to which the container will connect.
+  # Could be host, bridge or the name of a custom network.
+  network: "{{ gitea_runner_docker_network | default('bridge') }}"
+  # Whether to use privileged mode or not when launching task containers (privileged mode is required for Docker-in-Docker).
+  privileged: false
+  # And other options to be used when the container is started (eg, --add-host=my.gitea.url:host-gateway).
+  options: "--add-host=gitea.{{ domain }}:host-gateway"
+  # The parent directory of a job's working directory.
+  # NOTE: There is no need to add the first '/' of the path as act_runner will add it automatically.
+  # If the path starts with '/', the '/' will be trimmed.
+  # For example, if the parent directory is /path/to/my/dir, workdir_parent should be path/to/my/dir
+  # If it's empty, /workspace will be used.
+  workdir_parent: {{ gitea_runner_workdir_parent | default('workspace') }}
+  # Volumes (including bind mounts) can be mounted to containers. Glob syntax is supported, see https://github.com/gobwas/glob
+  # You can specify multiple volumes. If the sequence is empty, no volumes can be mounted.
+  # Allow mounting workspace and common system paths for job execution
+  valid_volumes:
+    - "workspace/**"
+    - "/tmp/**"
+{% if gitea_runner_docker_volumes %}
+{% for volume in gitea_runner_docker_volumes %}
+    - "{{ volume }}"
+{% endfor %}
+{% endif %}
+  # Use system Docker daemon for job containers
+  # If it's empty, act_runner will find an available docker host automatically.
+  docker_host: ""
+  # Pull docker image(s) even if already present
+  force_pull: {{ gitea_force_pull == 'always' | ternary('true', 'false') }}
+  # Rebuild docker image(s) even if already present
+  force_rebuild: false
+{% else %}
+  # Container execution disabled for host-based runners
   # Specifies the network to which the container will connect.
   # Could be host, bridge or the name of a custom network.
   # If it's empty, act_runner will create a network automatically.
@@ -93,6 +127,7 @@ container:
   force_pull: false
   # Rebuild docker image(s) even if already present
   force_rebuild: false
+{% endif %}
 
 host:
   # The parent directory of a job's working directory.
