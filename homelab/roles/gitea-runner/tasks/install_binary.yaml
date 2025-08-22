@@ -6,13 +6,13 @@
         gitea_runner_detected_arch: >-
           {%- if ansible_architecture is defined -%}
             {%- if ansible_architecture == 'x86_64' -%}
-            amd64
+              amd64
             {%- elif ansible_architecture == 'aarch64' -%}
-            arm64
+              arm64
             {%- elif ansible_architecture == 'armv7l' -%}
-            armv7
+              armv7
             {%- else -%}
-            amd64
+              amd64
             {%- endif -%}
           {%- else -%}
             amd64
@@ -191,7 +191,8 @@
           --instance https://gitea.{{ domain }} \
           --token {{ registration_token }} \
           --name {{ gitea_runner_name | default('homelab-runner') }} \
-          --labels '{{ gitea_runner_labels | default('self-hosted:host,linux:host') }}'"
+          --labels '{{ gitea_runner_labels | default('self-hosted:host,linux:host') }}'{% if gitea_runner_ephemeral | default(false) %} \
+          --ephemeral{% endif %}"
       when: needs_registration
       register: runner_registration
       become: "{{ gitea_runner_become | default(true) }}"

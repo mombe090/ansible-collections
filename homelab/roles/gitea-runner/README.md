@@ -43,6 +43,74 @@ gitea_runner_log_level: "info"
 # Gitea instance configuration
 gitea_instance_url: "https://gitea.example.com"
 gitea_runner_registration_token: "your-registration-token"
+```
+
+## Usage
+
+### Docker Mode
+
+For container-based execution using Docker:
+
+```yaml
+---
+- name: Deploy Gitea Actions Runner (Docker)
+  hosts: docker_hosts
+  become: true
+  vars:
+    domain: "example.com"
+    registration_token: "your-registration-token"
+
+  roles:
+    - role: gitea-runner
+      vars:
+        gitea_runner_install_method: "docker"
+        gitea_runner_labels: "ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host"
+```
+
+### Binary Mode
+
+For native Linux execution without Docker:
+
+```yaml
+---
+- name: Deploy Gitea Actions Runner (Binary)
+  hosts: linux_hosts
+  become: true
+  vars:
+    domain: "example.com"
+    registration_token: "your-registration-token"
+
+  roles:
+    - role: gitea-runner
+      vars:
+        gitea_runner_install_method: "binary"
+        domain: "example.com"
+        registration_token: "your-registration-token"
+        gitea_runner_labels: "self-hosted:host,linux:host"
+```
+
+## Runner Labels
+
+The `gitea_runner_labels` variable determines which workflows the runner can execute:
+
+- **Docker Mode**: Use labels like `ubuntu-latest:docker://catthehacker/ubuntu:act-latest`
+- **Binary Mode**: Use labels like `self-hosted:host`, `linux:host`, or custom labels
+
+### Examples:
+
+```yaml
+# For Docker mode with multiple container images
+gitea_runner_labels: "ubuntu-latest:docker://catthehacker/ubuntu:act-latest,ubuntu-22.04:docker://ubuntu:22.04"
+
+# For binary mode with host execution
+gitea_runner_labels: "self-hosted:host,linux:host,custom-runner:host"
+
+# For Docker mode with fallback to host
+gitea_runner_labels: "ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host"
+
+# Gitea instance configuration
+gitea_instance_url: "https://gitea.example.com"
+gitea_runner_registration_token: "your-registration-token"
 domain: "example.com"  # Used to construct gitea URL
 registration_token: "your-registration-token"
 ```

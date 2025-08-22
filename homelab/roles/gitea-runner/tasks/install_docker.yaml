@@ -87,11 +87,13 @@
         container: gitea-runner
         command: >
           act_runner register
+          --no-interactive
           --instance https://gitea.{{ domain }}
           --token {{ registration_token }}
           --name {{ gitea_runner_name | default('homelab-runner') }}
           --labels {{ gitea_runner_labels | default('ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host') }}
-          --config /data/.runner
+          --config /data/.runner{% if gitea_runner_ephemeral | default(false) %}
+          --ephemeral{% endif %}
       when: needs_registration
       register: runner_registration
 

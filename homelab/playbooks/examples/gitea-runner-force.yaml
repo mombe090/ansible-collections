@@ -1,0 +1,26 @@
+---
+# Example playbook demonstrating force registration feature
+- name: Deploy Gitea Actions Runner with Force Registration
+  hosts: gitea_runner_hosts
+  become: false
+  vars:
+    # Force re-registration even if runner is already registered
+    gitea_runner_force_registration: true
+
+    # Other configuration options
+    gitea_runner_install_method: binary # or 'docker'
+    gitea_runner_name: "homelab-runner-forced"
+    gitea_runner_labels: "self-hosted:host,linux:host,rebuilt:true"
+
+  roles:
+    - gitea-runner
+# Usage examples:
+#
+# 1. Force re-registration with binary installation:
+#    ansible-playbook -e gitea_runner_force_registration=true playbooks/gitea-runner-force.yaml
+#
+# 2. Force re-registration with different runner name:
+#    ansible-playbook -e "gitea_runner_force_registration=true gitea_runner_name=new-runner-name" playbooks/gitea-runner-force.yaml
+#
+# 3. Force re-registration with Docker installation:
+#    ansible-playbook -e "gitea_runner_force_registration=true gitea_runner_install_method=docker" playbooks/gitea-runner-force.yaml

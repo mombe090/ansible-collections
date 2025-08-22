@@ -28,6 +28,7 @@ gitea_runner_registration_token: "{{ registration_token }}"
 
 # Registration options
 gitea_runner_force_registration: false
+gitea_runner_ephemeral: false # Enable ephemeral runners for enhanced security (act_runner 0.2.12+)
 
 # Docker configuration
 gitea_force_pull: "missing"
