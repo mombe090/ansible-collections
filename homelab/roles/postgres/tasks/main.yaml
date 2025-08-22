@@ -7,6 +7,13 @@
           - postgres_dir is defined
         fail_msg: "Required variables (postgres_password, postgres_dir) must be defined"
 
+    - name: Ensure psycopg2 is installed
+      ansible.builtin.package:
+        name: python3-psycopg2
+        state: present
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"
+
     - name: Create secure postgres directory
       ansible.builtin.file:
         path: "{{ item }}"
