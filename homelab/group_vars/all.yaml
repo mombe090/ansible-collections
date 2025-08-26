@@ -21,6 +21,8 @@ db_users:
     password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
   - name: gitea
     password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
+  - name: photoprism
+    password: "{{ lookup('env', 'PHOTOPRISM_DB_PASSWORD') | default(lookup('env', 'HOMELAB_PASSWORD')) }}"
 
 databases:
   - name: authentik
@@ -28,4 +30,7 @@ databases:
     encoding: UTF8
   - name: gitea
     owner: gitea
+    encoding: UTF8
+  - name: photoprism
+    owner: photoprism
     encoding: UTF8

@@ -45,18 +45,35 @@
     - nfs_manage_services
     - nfs_client_services is defined
 
-- name: Create NFS mount point directories
-  ansible.builtin.file:
-    path: "{{ item.mount_point }}"
-    state: directory
-    owner: "{{ item.owner | default('root') }}"
-    group: "{{ item.group | default('root') }}"
-    mode: "{{ item.mode | default('0755') }}"
+- name: Check if directories are already mount points
+  ansible.builtin.command: mountpoint -q "{{ item.mount_point }}"
   loop: "{{ nfs_mounts }}"
-  become: true
+  register: existing_mount_check
+  changed_when: false
+  failed_when: false
   when:
     - nfs_create_mount_dirs
     - item.state | default('mounted') != 'absent'
+
+- name: Create NFS mount point directories (only if not already mounted)
+  ansible.builtin.file:
+    path: "{{ item.item.mount_point }}"
+    state: directory
+  loop: "{{ existing_mount_check.results | default([]) }}"
+  become: true
+  when:
+    - nfs_create_mount_dirs
+    - item.item.state | default('mounted') != 'absent'
+    - item.rc != 0
+
+- name: Debug skip directory creation for existing mount points
+  ansible.builtin.debug:
+    msg: "Skipping directory creation for {{ item.item.mount_point }} - already a mount point"
+  loop: "{{ existing_mount_check.results | default([]) }}"
+  when:
+    - nfs_create_mount_dirs
+    - item.item.state | default('mounted') != 'absent'
+    - item.rc == 0
 
 - name: Remove mount point directories for absent mounts
   ansible.builtin.file:
@@ -67,12 +84,21 @@
   when:
     - item.state | default('mounted') == 'absent'
 
-- name: Check if NFS share is already mounted
-  ansible.builtin.command: mountpoint -q {{ item.mount_point }}
+- name: Check if NFS shares are already mounted
+  ansible.builtin.command: mountpoint -q "{{ item.mount_point }}"
   loop: "{{ nfs_mounts }}"
   register: mount_check
   changed_when: false
   failed_when: false
+  when: item.state | default('mounted') != 'absent'
+
+- name: Debug mount check results
+  ansible.builtin.debug:
+    msg: "Mount point {{ item.item.mount_point }}: {{ 'already mounted' if item.rc == 0 else 'not mounted' }}"
+  loop: "{{ mount_check.results | default([]) }}"
+  when:
+    - mount_check is defined
+    - item.item.state | default('mounted') != 'absent'
 
 - name: Add NFS mount to /etc/fstab
   ansible.builtin.lineinfile:
@@ -86,20 +112,36 @@
     - item.persistent | default(true)
     - item.state | default('mounted') != 'absent'
 
-- name: Mount NFS shares using shell
+- name: Mount NFS shares (only if not already mounted)
   ansible.builtin.shell: |
-    if ! mountpoint -q {{ item.mount_point }}; then
-      mount -t {{ item.fstype | default('nfs') }} -o {{ item.options | default(nfs_default_mount_options) }} {{ item.server }}:{{ item.path }} {{ item.mount_point }}
+    if ! mountpoint -q "{{ item.item.mount_point }}"; then
+      echo "Mounting {{ item.item.server }}:{{ item.item.path }} to {{ item.item.mount_point }}"
+      mount -t {{ item.item.fstype | default('nfs') }} -o {{ item.item.options | default(nfs_default_mount_options) }} {{ item.item.server }}:{{ item.item.path }} "{{ item.item.mount_point }}"
+    else
+      echo "Skipping mount - {{ item.item.mount_point }} already mounted"
     fi
-  loop: "{{ nfs_mounts }}"
+  loop: "{{ mount_check.results | default([]) }}"
   become: true
   register: nfs_mount_results
-  when: item.state | default('mounted') == 'mounted'
+  when:
+    - item.item.state | default('mounted') == 'mounted'
+    - mount_check is defined
+
+- name: Show mount operation results
+  ansible.builtin.debug:
+    msg: "{{ item.stdout_lines | default(['No output']) }}"
+  loop: "{{ nfs_mount_results.results | default([]) }}"
+  when:
+    - nfs_mount_results is defined
+    - item.item.item.state | default('mounted') == 'mounted'
 
 - name: Unmount NFS shares
   ansible.builtin.shell: |
-    if mountpoint -q {{ item.mount_point }}; then
-      umount {{ item.mount_point }}
+    if mountpoint -q "{{ item.mount_point }}"; then
+      echo "Unmounting {{ item.mount_point }}"
+      umount "{{ item.mount_point }}"
+    else
+      echo "{{ item.mount_point }} is not mounted"
     fi
   loop: "{{ nfs_mounts }}"
   become: true
@@ -128,20 +170,20 @@
     - item.state | default('mounted') == 'mounted'
   ignore_errors: true
 
-- name: Verify NFS mounts
-  ansible.builtin.command: "mountpoint -q {{ item.mount_point }}"
+- name: Final verification of NFS mounts
+  ansible.builtin.command: "mountpoint -q '{{ item.mount_point }}'"
   loop: "{{ nfs_mounts }}"
-  register: mount_check
+  register: final_mount_check
   changed_when: false
   failed_when: false
   when:
     - nfs_validate_mounts
     - item.state | default('mounted') == 'mounted'
 
-- name: Display mount verification results
+- name: Display final mount verification results
   ansible.builtin.debug:
-    msg: "Mount {{ item.item.mount_point }}: {{ 'SUCCESS' if item.rc == 0 else 'FAILED' }}"
-  loop: "{{ mount_check.results | default([]) }}"
+    msg: "Mount {{ item.item.mount_point }}: {{ 'SUCCESS - Mounted and accessible' if item.rc == 0 else 'FAILED - Not mounted' }}"
+  loop: "{{ final_mount_check.results | default([]) }}"
   when:
     - nfs_validate_mounts
     - item.item.state | default('mounted') == 'mounted'

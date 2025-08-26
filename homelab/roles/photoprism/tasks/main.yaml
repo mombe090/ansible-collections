@@ -1,0 +1,67 @@
+---
+- name: PhotoPrism deployment with Docker Compose
+  block:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - photoprism_db_password is defined
+          - photoprism_admin_password is defined
+          - photoprism_originals_path is defined
+          - photoprism_dir is defined
+        fail_msg: "Required variables (photoprism_db_password, photoprism_admin_password, photoprism_originals_path, photoprism_dir) must be defined"
+
+    - name: Create secure photoprism directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0750"
+        owner: root
+        group: docker
+      loop:
+        - "{{ photoprism_dir }}"
+        - "{{ photoprism_storage_path }}"
+        - "{{ photoprism_import_path }}"
+
+    - name: Create MariaDB data directory
+      ansible.builtin.file:
+        path: "{{ photoprism_dir }}/database"
+        state: directory
+        mode: "0750"
+        owner: "999" # MariaDB container user
+        group: "999"
+
+    - name: Deploy compose configuration
+      ansible.builtin.template:
+        src: compose.yaml.j2
+        dest: "{{ photoprism_dir }}/compose.yaml"
+        backup: true
+        mode: "0640"
+      notify:
+        - restart photoprism
+
+    - name: Deploy environment file
+      ansible.builtin.template:
+        src: .env.j2
+        dest: "{{ photoprism_dir }}/.env"
+        mode: "0600"
+      notify:
+        - restart photoprism
+      no_log: true
+
+    - name: Ensure proxy docker network exists
+      community.docker.docker_network:
+        name: proxy
+        state: present
+
+    - name: Initial deployment (if no changes)
+      community.docker.docker_compose_v2:
+        project_src: "{{ photoprism_dir }}"
+        state: present
+        recreate: never
+        wait: true
+        wait_timeout: 300
+      when: not (ansible_handlers_notified | default([]) | intersect(['restart photoprism']))
+
+  become: true
+  tags: [photoprism]
+  when: photoprism_enabled | default(true)

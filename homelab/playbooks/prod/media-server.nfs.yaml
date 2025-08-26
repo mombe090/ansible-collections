@@ -1,0 +1,41 @@
+---
+- name: Media Photo TrueNAS
+  hosts: media_servers
+  become: true
+  gather_facts: true
+
+  vars:
+    nfs_mounts:
+      - server: "192.168.10.2"
+        path: "/mnt/homelab-1t/Personal/Apple-Photos"
+        mount_point: "/mnt/photos"
+        fstype: "nfs4"
+        options: "defaults,nfsvers=4,rsize=8192,wsize=8192,timeo=14,soft"
+        state: "mounted"
+        persistent: true
+        owner: root
+        group: root
+        mode: "0755"
+
+    # Client configuration
+    nfs_client_domain: "{{ lookup('env', 'HOMELAB_DOMAIN') | default('home.mombesoft.com') }}"
+    nfs_validate_mounts: true
+
+  roles:
+    - nfs-client
+
+  post_tasks:
+    - name: Test NFS mount access
+      ansible.builtin.command: ls -la /mnt/photos
+      register: nfs_test_result
+      changed_when: false
+      failed_when: false
+
+    - name: Display test results
+      ansible.builtin.debug:
+        msg: "NFS mount test result: {{ 'SUCCESS' if nfs_test_result.rc == 0 else 'FAILED' }}"
+
+    - name: Show mount details
+      ansible.builtin.debug:
+        var: nfs_test_result.stdout_lines
+      when: nfs_test_result.rc == 0
