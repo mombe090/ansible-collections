@@ -1,0 +1,111 @@
+# Arch Linux role default variables
+
+# Whether to install development tools
+install_dev_tools: true
+install_system_utilities: true
+
+# AUR packages to install via yay
+aur_packages:
+  - gemini-cli
+  - google-chrome
+  - kubecolor
+  - discord
+  - marimo
+
+# Official repository packages to install via pacman
+pacman_packages:
+  # Base development tools
+  - base-devel
+  - git
+  - curl
+  - wget
+  - vim
+  - nano
+  - htop
+  - tree
+  - unzip
+  - zip
+  - rsync
+  - openssh
+  - sudo
+  - which
+  - man-db
+  - man-pages
+
+system_utilities:
+  - ffmpeg
+  - fd
+  - fzf
+  - imagemagick
+  - jq
+  - poppler
+  - networkmanager
+  - resvg
+  - ripgrep
+  - systemd
+  - yazi
+  - yq
+  - zellij
+  - zoxide
+  - 7zip
+
+development_packages:
+  - python
+  - python-pip
+  - nodejs
+  - uv
+  - npm
+  - docker
+  - docker-compose
+  - git
+  - base-devel
+  - ruby
+  - ruby-erb
+
+devops_packages:
+  - act
+  - argocd
+  - aws-cli
+  - bat
+  - direnv
+  - duf
+  - eza
+  - fluxcd
+  - github-cli
+  - go-task
+  - gradle
+  - helm
+  - k9s
+  #- kind
+  - kubectl
+  - kubectx
+  - kustomize
+  - markdownlint-cli2
+  - maven
+  #- mkalias
+  #- mkpasswd
+  #- navi
+  - neovim
+  - nodejs
+  - pre-commit
+  #- podman
+  - ripgrep
+  #- rustc
+  #- rustup
+  - sd
+  - starship
+  - stow
+  - talosctl
+  - tflint
+  #- tfsec
+  #- tfswitch
+  - terraform
+  #- terraform-docs
+  #- tldr
+  - uv
+  - vivid
+  - wget
+
+multimedia_packages:
+  - obs-studio
+  - ffmpeg
