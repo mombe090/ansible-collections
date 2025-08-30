@@ -1,0 +1,47 @@
+---
+# Package installation tasks with better error handling
+
+- name: Install core system packages
+  become: true
+  ansible.builtin.pacman:
+    name:
+      - base-devel
+      - git
+      - curl
+      - wget
+      - vim
+      - nano
+      - htop
+      - tree
+      - unzip
+      - zip
+      - rsync
+      - openssh
+      - sudo
+      - which
+      - man-db
+      - man-pages
+      - vivid
+    state: present
+    update_cache: false
+  register: core_packages_result
+  ignore_errors: true
+
+- name: Install development tools
+  become: true
+  ansible.builtin.pacman:
+    name: "{{ development_packages }}"
+    state: present
+    update_cache: false
+  register: dev_packages_result
+  ignore_errors: true
+  when: install_dev_tools == true
+
+- name: Install DevOps tools
+  become: true
+  ansible.builtin.pacman:
+    name: "{{ devops_packages }}"
+    state: present
+    update_cache: false
+  register: devops_packages_result
+  ignore_errors: false

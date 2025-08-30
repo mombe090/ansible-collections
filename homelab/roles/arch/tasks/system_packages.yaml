@@ -1,0 +1,9 @@
+- name: Install system utilities
+  become: true
+  ansible.builtin.pacman:
+    name: "{{ system_utilities  }}"
+    state: present
+    update_cache: false
+  when: install_system_utilities == true
+  register: system_utils_result
+  ignore_errors: true

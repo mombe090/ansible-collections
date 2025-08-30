@@ -1,0 +1,7 @@
+---
+# Handlers for Arch Linux role
+
+- name: update pacman cache
+  become: true
+  ansible.builtin.pacman:
+    update_cache: true
