@@ -1,0 +1,51 @@
+---
+# Main tasks for Arch Linux role
+
+- name: Verify we're on Arch Linux
+  ansible.builtin.fail:
+    msg: "This role is only for Arch Linux systems"
+  when: ansible_os_family != "Archlinux"
+
+- name: Check for existing pacman lock in role
+  become: true
+  ansible.builtin.stat:
+    path: /var/lib/pacman/db.lck
+  register: role_pacman_lock
+  when: ansible_os_family == "Archlinux"
+
+- name: Remove stale pacman lock if exists in role
+  become: true
+  ansible.builtin.file:
+    path: /var/lib/pacman/db.lck
+    state: absent
+  when:
+    - ansible_os_family == "Archlinux"
+    - role_pacman_lock.stat.exists
+
+- name: Force refresh package databases
+  become: true
+  ansible.builtin.shell:
+    cmd: pacman -Syy --noconfirm
+  when: ansible_os_family == "Archlinux"
+  retries: 3
+  delay: 5
+  register: pacman_refresh
+  until: pacman_refresh.rc == 0
+
+- name: all packages
+  ansible.builtin.include_tasks: packages.yaml
+  when: ansible_os_family == "Archlinux"
+
+- ansible.builtin.include_tasks: system_packages.yaml
+  when: ansible_os_family == "Archlinux"
+
+- ansible.builtin.include_tasks: yay_setup.yaml
+  when:
+    - ansible_os_family == "Archlinux"
+    - install_yay == true
+
+- name: Clean package cache
+  become: true
+  ansible.builtin.shell:
+    cmd: pacman -Sc --noconfirm
+  when: ansible_os_family == "Archlinux"
