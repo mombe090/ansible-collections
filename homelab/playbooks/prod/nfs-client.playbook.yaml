@@ -53,4 +53,3 @@
       ansible.builtin.debug:
         var: nfs_test_result.stdout_lines
       when: nfs_test_result.rc == 0
-
