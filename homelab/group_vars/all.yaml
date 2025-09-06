@@ -19,10 +19,15 @@ git_user_email: "{{ lookup('env', 'HOMELAB_USER_EMAIL') }}"
 db_users:
   - name: authentik
     password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
+
   - name: gitea
     password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
+
   - name: photoprism
     password: "{{ lookup('env', 'PHOTOPRISM_DB_PASSWORD') | default(lookup('env', 'HOMELAB_PASSWORD')) }}"
+
+  - name: vaultwarden
+    password: "{{ lookup('env', 'VAULTWARDEN_DB_PASSWORD') | default(lookup('env', 'HOMELAB_PASSWORD')) }}"
 
 databases:
   - name: authentik
@@ -33,4 +38,7 @@ databases:
     encoding: UTF8
   - name: photoprism
     owner: photoprism
+    encoding: UTF8
+  - name: vaultwarden
+    owner: vaultwarden
     encoding: UTF8

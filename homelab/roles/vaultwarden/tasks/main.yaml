@@ -1,0 +1,6 @@
+---
+# Regular deployment tasks
+- name: Vaultwarden deployment with Docker Compose
+  ansible.builtin.include_tasks: deploy.yaml
+  when: not (vaultwarden_backup_mode | default(false))
+  tags: [deploy]

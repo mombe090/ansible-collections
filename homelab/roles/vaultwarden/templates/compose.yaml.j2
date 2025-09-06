@@ -1,0 +1,31 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:${VAULTWARDEN_VERSION:-1.34.3}
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      # Database configuration using separate variables (safer for special characters)
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD_ENCODED}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      - DOMAIN=${VAULTWARDEN_DOMAIN}
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - SIGNUPS_ALLOWED=${VAULTWARDEN_SIGNUPS_ALLOWED:-false}
+      - WEBSOCKET_ENABLED=${VAULTWARDEN_WEBSOCKET_ENABLED:-true}
+    networks:
+      - proxy
+      - default
+    volumes:
+      - {{ vaultwarden_dir }}/data:/data
+      - {{ vaultwarden_backup_dir }}:/data/backups
+    ports:
+      - "${VAULTWARDEN_HTTP_PORT:-8080}:80"
+      - "${VAULTWARDEN_WEBSOCKET_PORT:-3012}:3012"
+    labels:
+{% for label in vaultwarden_labels %}
+      - "{{ label }}"
+{% endfor %}
+
+networks:
+  proxy:
+    external: true
+  default:
+    driver: bridge
