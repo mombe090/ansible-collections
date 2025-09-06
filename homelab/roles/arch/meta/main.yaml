@@ -1,0 +1,19 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: "mombe090"
+  description: Arch Linux package management role using pacman and yay
+  company: Homelab
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: ArchLinux
+      versions:
+        - all
+  galaxy_tags:
+    - archlinux
+    - pacman
+    - yay
+    - aur
+    - package-management

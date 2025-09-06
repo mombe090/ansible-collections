@@ -1,0 +1,63 @@
+---
+# AUR helper (yay) installation and management
+
+- name: Check if yay is installed
+  ansible.builtin.shell:
+    cmd: which yay
+  register: yay_installed
+  failed_when: false
+  changed_when: false
+
+- name: Install dependencies for building yay
+  become: true
+  ansible.builtin.pacman:
+    name:
+      - base-devel
+      - git
+    state: present
+  when: yay_installed.rc != 0
+
+- name: Clone yay repository
+  become: false
+  ansible.builtin.git:
+    repo: https://aur.archlinux.org/yay-bin.git
+    dest: /tmp/yay-bin
+    force: true
+  when: yay_installed.rc != 0
+
+- name: Build and install yay
+  become: false
+  ansible.builtin.shell:
+    cmd: |
+      cd /tmp/yay-bin
+      makepkg -si --noconfirm
+    creates: /usr/bin/yay
+  when: yay_installed.rc != 0
+
+- name: Verify yay installation
+  ansible.builtin.shell:
+    cmd: yay --version
+  register: yay_version_check
+  changed_when: false
+
+- name: Install AUR packages via yay
+  become: false
+  ansible.builtin.shell:
+    cmd: yay -S --noconfirm {{ item }}
+  loop: "{{ aur_packages }}"
+  register: yay_install_result
+  failed_when: false
+
+- name: Display failed AUR package installations
+  ansible.builtin.debug:
+    msg: "Failed to install AUR package: {{ item.item }} - Error: {{ item.stderr | default('Unknown error') }}"
+  loop: "{{ yay_install_result.results | default([]) }}"
+  when:
+    - item.rc is defined
+    - item.rc != 0
+
+- name: Clean yay cache
+  become: false
+  ansible.builtin.shell:
+    cmd: yay -Sc --noconfirm
+  when: yay_installed.rc == 0 or yay_install_result is succeeded

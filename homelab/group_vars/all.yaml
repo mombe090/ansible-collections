@@ -1,4 +1,4 @@
-ansible_user: '{{ lookup("env", "HOMELAB_USER")}}'
+ansible_user: '{{ lookup("env", "homelab_user")}}'
 domain: '{{ lookup("env", "HOMELAB_DOMAIN") }}'
 proxy_host: 'proxy.{{ lookup("env", "HOMELAB_DOMAIN") }}'
 proxmox_username: "{{ lookup('env', 'PROXMOX_HOMEPAGE_USERNAME') }}"
