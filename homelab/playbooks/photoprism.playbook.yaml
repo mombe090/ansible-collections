@@ -1,0 +1,43 @@
+---
+- name: Deploy PhotoPrism
+  hosts: proxy # or your target host group
+  gather_facts: true
+  become: true
+  vars:
+    domain: "{{ lookup('env', 'HOMELAB_DOMAIN') }}"
+  roles:
+    - role: nfs-client
+      vars:
+        nfs_client_exports:
+          - { path: "/mnt/photos", url: "192.168.10.2:/mnt/photos" }
+    - role: photoprism
+      vars:
+        # Required passwords - store these in environment variables
+        photoprism_admin_password: "{{ lookup('env', 'PHOTOPRISM_ADMIN_PASSWORD') }}"
+        photoprism_db_password: "{{ lookup('env', 'PHOTOPRISM_DB_PASSWORD') }}"
+        photoprism_db_root_password: "{{ lookup('env', 'PHOTOPRISM_DB_ROOT_PASSWORD') }}"
+
+        # Storage configuration - adjust paths for your setup
+        photoprism_originals_path: /mnt/photos # Your photo collection
+        photoprism_storage_path: /opt/photoprism/storage # Fast storage preferred
+        photoprism_import_path: /opt/photoprism/import
+
+        # Site configuration
+        photoprism_site_url: "https://photos.{{ domain }}"
+        photoprism_site_title: "Family Photos"
+        photoprism_site_caption: "AI-Powered Photos App"
+        photoprism_site_description: "Browse Your Life in Pictures"
+        photoprism_site_author: "{{ lookup('env', 'HOMELAB_USER_FULLNAME') }}"
+
+        # Performance settings
+        photoprism_workers: 2 # Adjust based on your CPU
+        photoprism_readonly: false
+
+        # Traefik labels for reverse proxy
+        photoprism_labels:
+          - "traefik.enable=true"
+          - "traefik.http.routers.photoprism.rule=Host(`photos.{{ domain }}`)"
+          - "traefik.http.routers.photoprism.tls=true"
+          - "traefik.http.routers.photoprism.tls.certresolver=cloudflare"
+          - "traefik.http.services.photoprism.loadbalancer.server.port=2342"
+          - "traefik.docker.network=proxy"

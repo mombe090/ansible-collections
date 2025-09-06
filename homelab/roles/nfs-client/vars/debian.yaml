@@ -1,0 +1,12 @@
+---
+# Debian/Ubuntu specific variables for NFS client
+
+nfs_client_packages:
+  - nfs-common
+  - rpcbind
+  - keyutils
+
+nfs_client_services:
+  - rpcbind
+
+nfs_idmap_client_service: nfs-idmapd

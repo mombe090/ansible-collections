@@ -1,12 +1,11 @@
-#dependencies:
-#  - role: common
-#
-#  - role: geerlingguy.pip
-#    vars:
-#      pip_install_packages:
-#        - name: docker
-#
-#  - role: geerlingguy.docker
-#    vars:
-#      docker_users:
-#        - '{{ ansible_user }}'
+dependencies:
+  - role: common
+    vars:
+      install_brew: false
+      install_starship: true
+      install_dev_tools: false
+      initialization: false
+
+  - role: docker
+    vars:
+      initialization: false

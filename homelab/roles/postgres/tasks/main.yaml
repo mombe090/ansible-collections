@@ -1,0 +1,58 @@
+- name: PostgreSQL deployment with Docker Compose
+  block:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - postgres_password is defined
+          - postgres_dir is defined
+        fail_msg: "Required variables (postgres_password, postgres_dir) must be defined"
+
+    - name: Ensure psycopg2 is installed
+      ansible.builtin.package:
+        name: python3-psycopg2
+        state: present
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Create secure postgres directory
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0750"
+        owner: root
+        group: docker
+      loop:
+        - "{{ postgres_dir }}"
+
+    - name: Deploy compose configuration
+      ansible.builtin.template:
+        src: compose.yaml.j2
+        dest: "{{ postgres_dir }}/compose.yaml"
+        backup: true
+        mode: "0640"
+      notify:
+        - restart postgres
+        - wait for postgres
+        - verify postgres health
+
+    - name: Deploy environment file
+      ansible.builtin.template:
+        src: .env.j2
+        dest: "{{ postgres_dir }}/.env"
+        mode: "0600"
+      notify:
+        - restart postgres
+        - wait for postgres
+        - verify postgres health
+      no_log: true
+
+    - name: Initial deployment (if no changes)
+      community.docker.docker_compose_v2:
+        project_src: "{{ postgres_dir }}"
+        state: present
+        recreate: never
+      when: not (ansible_handlers_notified | default([]) | intersect(['restart postgres']))
+
+  become: true
+  tags: [postgres]
+  when: postgres_enabled | default(true)

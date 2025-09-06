@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  author: mombe090
+  description: PhotoPrism deployment with Docker Compose
+  company: mombesoft.com
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - photoprism
+    - docker
+    - photos
+    - media
+    - homelab
+
+dependencies:
+  []
+  #- role: docker
+  #  vars:
+  #    initialization: true
+  #  when: docker_install | default(true)

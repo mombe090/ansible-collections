@@ -65,4 +65,5 @@
 #- import_playbook: playbooks/nix.playbook.yaml
 #- import_playbook: playbooks/traefik.playbook.yaml
 #- import_playbook: playbooks/netbird.playbook.yaml
+#- import_playbook: playbooks/pve.playbook.yaml
 #- import_playbook: playbooks/arch.playbook.yaml

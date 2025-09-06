@@ -1,0 +1,49 @@
+---
+# Meta information for NFS server role
+
+galaxy_info:
+  author: "{{ ansible_user | default('homelab') }}"
+  description: "Configure and manage NFS server on Linux systems"
+  company: "Homelab"
+  license: "MIT"
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - "18.04"
+        - "20.04"
+        - "22.04"
+    - name: Debian
+      versions:
+        - "10"
+        - "11"
+        - "12"
+    - name: CentOS
+      versions:
+        - "7"
+        - "8"
+        - "9"
+    - name: RedHat
+      versions:
+        - "7"
+        - "8"
+        - "9"
+    - name: Rocky
+      versions:
+        - "8"
+        - "9"
+    - name: AlmaLinux
+      versions:
+        - "8"
+        - "9"
+
+  galaxy_tags:
+    - nfs
+    - server
+    - storage
+    - filesystem
+    - network
+    - sharing
+
+dependencies: []

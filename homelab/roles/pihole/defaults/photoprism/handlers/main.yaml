@@ -1,0 +1,21 @@
+---
+- name: restart photoprism
+  community.docker.docker_compose_v2:
+    project_src: "{{ photoprism_dir }}"
+    state: present
+    recreate: always
+    wait: true
+    wait_timeout: 300
+  become: true
+
+- name: stop photoprism
+  community.docker.docker_compose_v2:
+    project_src: "{{ photoprism_dir }}"
+    state: absent
+  become: true
+
+- name: remove photoprism env file
+  ansible.builtin.file:
+    path: "{{ photoprism_dir }}/.env"
+    state: absent
+  become: true

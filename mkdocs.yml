@@ -1,0 +1,102 @@
+site_name: Ansible Collections Documentation
+site_description: Documentation for homelab Ansible roles and playbooks
+site_author: mombe090
+site_url: https://ansible-collections.docs
+
+repo_name: mombe090/ansible-collections
+repo_url: https://git.mombesoft.com/mombe090/ansible-collections
+edit_uri: edit/main/docs/
+
+# Configuration
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.action.edit
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+# Plugins
+plugins:
+  - search
+  - autorefs
+
+# Navigation
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start: getting-started/quickstart.md
+    - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
+  - Roles:
+    - Overview: roles/index.md
+    - Infrastructure:
+      - Common: roles/common.md
+      - Docker: roles/docker.md
+      - LXC: roles/lxc.md
+      - Multipass: roles/multipass.md
+      - NIX: roles/nix.md
+    - Networking:
+      - NFS Server: roles/nfs-server.md
+      - NFS Client: roles/nfs-client.md
+      - Netbird: roles/netbird.md
+      - Traefik: roles/traefik.md
+      - TrueNAS NFS: roles/truenas-nfs.md
+    - Services:
+      - Authentik: roles/authentik.md
+      - Gitea: roles/gitea.md
+      - Gitea Runner: roles/gitea-runner.md
+      - Homepage: roles/gethomepage.md
+      - N8N: roles/n8n.md
+      - Pihole: roles/pihole.md
+      - PostgreSQL: roles/postgres.md
+  - Playbooks:
+    - Overview: playbooks/index.md
+    - Production: playbooks/production.md
+    - Development: playbooks/development.md
+  - Contributing: contributing.md
+  - License: license.md
+
+# Extra
+extra:
+  social:
+    - icon: fontawesome/brands/git-alt
+      link: https://git.mombesoft.com/mombe090/ansible-collections
+  version:
+    provider: mike

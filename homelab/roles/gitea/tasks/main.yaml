@@ -1,0 +1,19 @@
+---
+# Regular deployment tasks
+- name: Gitea deployment with Docker Compose
+  ansible.builtin.include_tasks: deploy.yaml
+  when: not (gitea_backup_mode | default(false))
+  tags: [deploy]
+
+# Backup tasks
+- name: Gitea backup tasks
+  ansible.builtin.include_tasks: backups.yaml
+  when: gitea_backup_mode | default(false)
+  tags: [backup]
+
+- name: Gitea backup scheduling
+  ansible.builtin.include_tasks: schedule-backup.yaml
+  when:
+    - gitea_backup_mode | default(false)
+    - gitea_backup_enabled | default(true)
+  tags: [schedule]

@@ -1,0 +1,39 @@
+---
+- name: Setup automated Gitea backup schedule
+  block:
+    - name: Create backup directory
+      ansible.builtin.file:
+        path: "{{ gitea_backup_dir | default(gitea_dir + '/backups') }}"
+        state: directory
+        mode: "0755"
+        owner: "1000"
+        group: "1000"
+
+    - name: Setup gitea backup cron job
+      ansible.builtin.cron:
+        name: "Gitea automated backup"
+        cron_file: gitea_backup
+        user: root
+        minute: "{{ gitea_backup_schedule.split(' ')[0] | default('0') }}"
+        hour: "{{ gitea_backup_schedule.split(' ')[1] | default('2') }}"
+        day: "{{ gitea_backup_schedule.split(' ')[2] | default('*') }}"
+        month: "{{ gitea_backup_schedule.split(' ')[3] | default('*') }}"
+        weekday: "{{ gitea_backup_schedule.split(' ')[4] | default('*') }}"
+        job: "cd {{ gitea_dir }} && docker exec --user git gitea gitea dump --config /data/gitea/conf/app.ini --file /data/backups/gitea-backup-$(date +%%Y%%m%%d_%%H%%M%%S).zip --type zip"
+        state: "{{ 'present' if gitea_backup_enabled | default(true) else 'absent' }}"
+
+    - name: Create backup cleanup cron job
+      ansible.builtin.cron:
+        name: "Gitea backup cleanup"
+        cron_file: gitea_backup_cleanup
+        user: root
+        minute: "0"
+        hour: "3"
+        day: "*"
+        month: "*"
+        weekday: "*"
+        job: "find {{ gitea_backup_dir | default(gitea_dir + '/backups') }} -name 'gitea-backup-*.zip' -type f -mtime +{{ gitea_backup_retention_days | default(30) }} -delete"
+        state: "{{ 'present' if (gitea_backup_enabled | default(true)) and (gitea_backup_cleanup | default(true)) else 'absent' }}"
+
+  become: true
+  tags: [gitea, backup, schedule]

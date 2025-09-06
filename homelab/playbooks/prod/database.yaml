@@ -1,0 +1,133 @@
+---
+- name: Database
+  hosts:
+    - databases
+  become: true
+  gather_facts: true
+  vars:
+    domain: "{{ lookup('env', 'HOMELAB_DOMAIN_PROD') }}"
+    virtualization_type: kvm
+    install_starship: true
+    install_brew: false
+    install_dev_tools: false
+    initialization: true
+    postgres_password: "{{ lookup('env', 'HOMELAB_PASSWORD') }}"
+
+  roles:
+    - role: postgres
+
+  tasks:
+    - name: PostgreSQL user and database management
+      block:
+        - name: Validate required variables
+          ansible.builtin.assert:
+            that:
+              - db_users is defined
+              - databases is defined
+              - postgres_admin_password is defined
+              - postgres_host is defined
+              - postgres_port is defined
+            fail_msg: "Required PostgreSQL variables must be defined"
+
+        - name: Wait for PostgreSQL to be ready
+          ansible.builtin.wait_for:
+            host: "{{ postgres_host }}"
+            port: "{{ postgres_port | default(5432) }}"
+            timeout: 60
+            delay: 5
+          when: postgres_wait_for_ready | default(true)
+
+        - name: Test PostgreSQL connectivity
+          community.postgresql.postgresql_ping:
+            login_host: "{{ postgres_host }}"
+            login_port: "{{ postgres_port | default(5432) }}"
+            login_user: "{{ postgres_admin_user | default('postgres') }}"
+            login_password: "{{ postgres_admin_password }}"
+          register: pg_ping
+          retries: 3
+          delay: 10
+          until: pg_ping is succeeded
+
+        - name: Create PostgreSQL users with secure defaults
+          community.postgresql.postgresql_user:
+            name: "{{ item.name | default(item) }}"
+            state: present
+            password: "{{ item.password | default(postgres_default_user_password) }}"
+            # Security settings
+            encrypted: true
+            expires: "{{ item.expires | default(omit) }}"
+            login_host: "{{ postgres_host }}"
+            login_port: "{{ postgres_port | default(5432) }}"
+            login_user: "{{ postgres_admin_user | default('postgres') }}"
+            login_password: "{{ postgres_admin_password }}"
+          loop: "{{ db_users }}"
+          loop_control:
+            label: "{{ item.name | default(item) }}"
+          environment:
+            PGOPTIONS: "-c password_encryption=scram-sha-256"
+          register: users_created
+          no_log: "{{ postgres_no_log_users | default(true) }}"
+
+        - name: Create PostgreSQL databases with proper settings
+          community.postgresql.postgresql_db:
+            name: "{{ item.name }}"
+            state: present
+            owner: "{{ item.owner }}"
+            # Encoding and locale settings
+            encoding: "{{ item.encoding | default('UTF8') }}"
+
+            # Connection settings
+            login_host: "{{ postgres_host }}"
+            login_port: "{{ postgres_port | default(5432) }}"
+            login_user: "{{ postgres_admin_user | default('postgres') }}"
+            login_password: "{{ postgres_admin_password }}"
+          loop: "{{ databases }}"
+          loop_control:
+            label: "{{ item.name }}"
+          register: databases_created
+          failed_when:
+            - databases_created.failed
+            - not (postgres_ignore_locale_errors | default(false))
+            - "'locale' not in databases_created.msg | default('')"
+
+        - name: Verify user creation
+          community.postgresql.postgresql_query:
+            db: postgres
+            query: "SELECT usename, usesuper, usecreatedb FROM pg_user WHERE usename = %s"
+            positional_args:
+              - "{{ item.name | default(item) }}"
+            login_host: "{{ postgres_host }}"
+            login_port: "{{ postgres_port | default(5432) }}"
+            login_user: "{{ postgres_admin_user | default('postgres') }}"
+            login_password: "{{ postgres_admin_password }}"
+          loop: "{{ db_users }}"
+          loop_control:
+            label: "{{ item.name | default(item) }}"
+          register: user_verification
+          when: postgres_verify_users | default(false)
+
+        - name: Display user creation summary
+          ansible.builtin.debug:
+            msg: |
+              PostgreSQL Management Summary:
+              - Users processed: {{ db_users | length }}
+              - Databases processed: {{ databases | length }}
+              - Privileges granted: {{ db_privileges | default([]) | length }}
+          when: postgres_show_summary | default(false)
+
+      rescue:
+        - name: Handle PostgreSQL management errors
+          ansible.builtin.debug:
+            msg: |
+              PostgreSQL management failed:
+              Error: {{ ansible_failed_result.msg | default('Unknown error') }}
+              Task: {{ ansible_failed_task.name | default('Unknown task') }}
+
+        - name: Fail with detailed error information
+          ansible.builtin.fail:
+            msg: |
+              PostgreSQL user/database management failed.
+              Check connectivity and credentials.
+              Original error: {{ ansible_failed_result.msg | default('Unknown error') }}
+
+      tags: [postgres, users, databases]

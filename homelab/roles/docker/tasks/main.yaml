@@ -1,0 +1,34 @@
+- name: Start and enable docker service
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Check if /etc/docker/daemon.json exists and contains proper config
+  ansible.builtin.shell:
+    cmd: |
+      if [ -f /etc/docker/daemon.json ]; then
+        grep -q "192.168.10" /etc/docker/daemon.json && grep -q "registry-mirrors" /etc/docker/daemon.json
+      else
+        exit 1
+      fi
+  register: docker_config_check
+  ignore_errors: true
+
+- name: Configure docker daemon with DNS and registry mirrors
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "dns": ["192.168.10.111", "192.168.10.250"],
+        "registry-mirrors": ["https://mirror.gcr.io"]
+      }
+    backup: true
+  when: docker_config_check.rc != 0
+  notify: restart docker
+
+- name: Restart docker service if config changed
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  when: docker_config_check.rc != 0

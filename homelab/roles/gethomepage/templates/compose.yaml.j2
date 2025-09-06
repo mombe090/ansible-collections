@@ -9,7 +9,7 @@ services:
       - "{{ homepage_port | default('3000') }}:3000"
     environment:
       TZ: {{ homepage_timezone | default('UTC') }}
-      HOMEPAGE_ALLOWED_HOSTS: homepage.home.mombesoft.com
+      HOMEPAGE_ALLOWED_HOSTS: "homepage.{{ domain }}"
     volumes:
       - {{ homepage_custom_dir | default('/opt/homepage/custom') }}:/app/config
     labels:

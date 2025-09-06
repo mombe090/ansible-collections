@@ -1,0 +1,30 @@
+---
+# Handlers for NFS server role
+
+- name: reload nfs exports
+  ansible.builtin.command: exportfs -ra
+  become: true
+  listen: "reload nfs exports"
+
+- name: restart nfs server
+  ansible.builtin.service:
+    name: "{{ nfs_server_service }}"
+    state: restarted
+  become: true
+  listen: "restart nfs server"
+  when: nfs_restart_on_change
+
+- name: restart rpcbind
+  ansible.builtin.service:
+    name: "{{ nfs_rpcbind_service }}"
+    state: restarted
+  become: true
+  listen: "restart rpcbind"
+
+- name: restart nfs idmap
+  ansible.builtin.service:
+    name: "{{ nfs_idmap_service }}"
+    state: restarted
+  become: true
+  listen: "restart nfs idmap"
+  when: nfs_idmap_service is defined

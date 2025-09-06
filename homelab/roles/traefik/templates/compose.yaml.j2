@@ -16,7 +16,7 @@ services:
       # - 443:443/tcp # Uncomment if you want HTTP3
       # - 443:443/udp # Uncomment if you want HTTP3
     environment:
-      CF_DNS_API_TOKEN: ${CLOUD_FLARE_HOME_API_TOKEN}
+      CF_DNS_API_TOKEN: ${CLOUDFLARE_HOME_API_TOKEN_PROD}
       ## Generated with echo $(htpasswd -nB mombe090) | sed -e s/\\$/\\$\\$/g
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
     volumes:

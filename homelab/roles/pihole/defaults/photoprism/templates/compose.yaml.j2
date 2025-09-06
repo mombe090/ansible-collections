@@ -1,0 +1,113 @@
+---
+services:
+  photoprism:
+    image: photoprism/photoprism:{{ photoprism_version }}
+    container_name: photoprism
+    restart: unless-stopped
+    stop_grace_period: 10s
+    depends_on:
+      - mariadb
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    networks:
+      - proxy
+      - photoprism-internal
+    ports:
+      - "{{ photoprism_port }}:2342"
+    environment:
+      # PhotoPrism Configuration
+      PHOTOPRISM_ADMIN_USER: ${PHOTOPRISM_ADMIN_USER}
+      PHOTOPRISM_ADMIN_PASSWORD: ${PHOTOPRISM_ADMIN_PASSWORD}
+      PHOTOPRISM_AUTH_MODE: "password"
+      PHOTOPRISM_SITE_URL: ${PHOTOPRISM_SITE_URL}
+      PHOTOPRISM_SITE_TITLE: ${PHOTOPRISM_SITE_TITLE}
+      PHOTOPRISM_SITE_CAPTION: ${PHOTOPRISM_SITE_CAPTION}
+      PHOTOPRISM_SITE_DESCRIPTION: ${PHOTOPRISM_SITE_DESCRIPTION}
+      PHOTOPRISM_SITE_AUTHOR: ${PHOTOPRISM_SITE_AUTHOR}
+
+      # Performance Settings
+      PHOTOPRISM_WORKERS: ${PHOTOPRISM_WORKERS}
+      PHOTOPRISM_READONLY: ${PHOTOPRISM_READONLY}
+
+      # Database Configuration
+      PHOTOPRISM_DATABASE_DRIVER: ${PHOTOPRISM_DATABASE_DRIVER}
+      PHOTOPRISM_DATABASE_SERVER: ${PHOTOPRISM_DATABASE_SERVER}
+      PHOTOPRISM_DATABASE_NAME: ${PHOTOPRISM_DATABASE_NAME}
+      PHOTOPRISM_DATABASE_USER: ${PHOTOPRISM_DATABASE_USER}
+      PHOTOPRISM_DATABASE_PASSWORD: ${PHOTOPRISM_DATABASE_PASSWORD}
+
+      # Feature Flags (AI disabled)
+      PHOTOPRISM_DISABLE_FACES: ${PHOTOPRISM_DISABLE_FACES}
+      PHOTOPRISM_DISABLE_CLASSIFICATION: ${PHOTOPRISM_DISABLE_CLASSIFICATION}
+      PHOTOPRISM_DISABLE_TENSORFLOW: ${PHOTOPRISM_DISABLE_TENSORFLOW}
+      PHOTOPRISM_DISABLE_TGA: ${PHOTOPRISM_DISABLE_TGA}
+      PHOTOPRISM_DISABLE_BACKUPS: ${PHOTOPRISM_DISABLE_BACKUPS}
+      PHOTOPRISM_DISABLE_WEBDAV: ${PHOTOPRISM_DISABLE_WEBDAV}
+      PHOTOPRISM_DISABLE_SETTINGS: ${PHOTOPRISM_DISABLE_SETTINGS}
+      PHOTOPRISM_DISABLE_PLACES: ${PHOTOPRISM_DISABLE_PLACES}
+      PHOTOPRISM_DISABLE_EXIFTOOL: ${PHOTOPRISM_DISABLE_EXIFTOOL}
+      PHOTOPRISM_DISABLE_FFMPEG: ${PHOTOPRISM_DISABLE_FFMPEG}
+      PHOTOPRISM_DISABLE_DARKTABLE: ${PHOTOPRISM_DISABLE_DARKTABLE}
+      PHOTOPRISM_DISABLE_RAWTHERAPEE: ${PHOTOPRISM_DISABLE_RAWTHERAPEE}
+      PHOTOPRISM_DISABLE_SIPS: ${PHOTOPRISM_DISABLE_SIPS}
+      PHOTOPRISM_DISABLE_HEIFCONVERT: ${PHOTOPRISM_DISABLE_HEIFCONVERT}
+
+      # Upload Settings
+      PHOTOPRISM_UPLOAD_NSFW: ${PHOTOPRISM_UPLOAD_NSFW}
+      PHOTOPRISM_DETECT_NSFW: ${PHOTOPRISM_DETECT_NSFW}
+      PHOTOPRISM_EXPERIMENTAL: ${PHOTOPRISM_EXPERIMENTAL}
+
+      # Logging
+      PHOTOPRISM_LOG_LEVEL: ${PHOTOPRISM_LOG_LEVEL}
+      PHOTOPRISM_DEBUG: ${PHOTOPRISM_DEBUG}
+
+      # Storage Paths
+      PHOTOPRISM_ORIGINALS_PATH: /photoprism/originals
+      PHOTOPRISM_STORAGE_PATH: /photoprism/storage
+      PHOTOPRISM_IMPORT_PATH: /photoprism/import
+
+    volumes:
+      # Important: Map your photo directories to /photoprism/originals
+      - "${PHOTOPRISM_ORIGINALS_PATH}:/photoprism/originals"
+      # Storage for thumbnails, config, cache, and sidecar files
+      - "${PHOTOPRISM_STORAGE_PATH}:/photoprism/storage"
+      # Optional: Import directory for organizing files
+      - "${PHOTOPRISM_IMPORT_PATH}:/photoprism/import"
+
+    working_dir: "/photoprism"
+
+  mariadb:
+    image: mariadb:{{ photoprism_mariadb_version }}
+    container_name: photoprism-mariadb
+    restart: unless-stopped
+    stop_grace_period: 5s
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    networks:
+      - photoprism-internal
+    command:
+      - mariadbd
+      - --innodb-buffer-pool-size=512M
+      - --transaction-isolation=READ-COMMITTED
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max-connections=512
+      - --innodb-rollback-on-timeout=OFF
+      - --innodb-lock-wait-timeout=120
+    volumes:
+      - "${PHOTOPRISM_DIR}/database:/var/lib/mysql"
+    environment:
+      MARIADB_AUTO_UPGRADE: "1"
+      MARIADB_INITDB_SKIP_TZINFO: "1"
+      MARIADB_DATABASE: ${PHOTOPRISM_DATABASE_NAME}
+      MARIADB_USER: ${PHOTOPRISM_DATABASE_USER}
+      MARIADB_PASSWORD: ${PHOTOPRISM_DATABASE_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${PHOTOPRISM_DATABASE_ROOT_PASSWORD}
+
+networks:
+  proxy:
+    external: true
+  photoprism-internal:
+    driver: bridge

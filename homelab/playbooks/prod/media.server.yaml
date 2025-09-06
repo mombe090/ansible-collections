@@ -1,0 +1,37 @@
+---
+- name: Deploy PhotoPrism (Production)
+  hosts: media_servers
+  gather_facts: true
+  become: true
+  vars:
+    domain: "{{ lookup('env', 'HOMELAB_DOMAIN') }}"
+  roles:
+    - role: photoprism
+      vars:
+        # Required passwords from environment
+        photoprism_admin_password: "{{ lookup('env', 'PHOTOPRISM_ADMIN_PASSWORD') }}"
+        photoprism_db_password: "{{ lookup('env', 'PHOTOPRISM_DB_PASSWORD') }}"
+        photoprism_db_root_password: "{{ lookup('env', 'PHOTOPRISM_DB_ROOT_PASSWORD') }}"
+
+        # Production storage paths
+        photoprism_originals_path: /mnt/photos # NFS mounted photo collection
+        photoprism_storage_path: /opt/photoprism/storage # Local SSD for performance
+        photoprism_import_path: /opt/photoprism/import
+
+        # Production site configuration
+        photoprism_site_url: "https://photos.{{ domain }}"
+        photoprism_site_title: "{{ lookup('env', 'HOMELAB_USER_FULLNAME') }} Photos"
+        photoprism_site_caption: "Family Photo Collection"
+        photoprism_site_description: "Our memories in pictures"
+        photoprism_site_author: "{{ lookup('env', 'HOMELAB_USER_FULLNAME') }}"
+
+        # Production performance settings
+        photoprism_workers: 4 # More workers for production
+        photoprism_readonly: false
+        photoprism_log_level: warn # Less verbose logging
+
+        # Production feature flags (AI still disabled)
+        photoprism_disable_faces: true
+        photoprism_disable_classification: true
+        photoprism_disable_tensorflow: true
+        photoprism_experimental: false

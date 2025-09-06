@@ -1,0 +1,12 @@
+---
+# RedHat/CentOS/Rocky/AlmaLinux specific variables for NFS client
+
+nfs_client_packages:
+  - nfs-utils
+  - rpcbind
+  - keyutils
+
+nfs_client_services:
+  - rpcbind
+
+nfs_idmap_client_service: nfs-idmapd

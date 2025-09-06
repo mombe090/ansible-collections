@@ -1,0 +1,40 @@
+---
+- name: Setup Gitea Actions runner
+  block:
+    - name: Gather facts if not already available
+      ansible.builtin.setup:
+      when: ansible_architecture is not defined
+
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - registration_token is defined
+          - domain is defined
+          - gitea_runner_install_method in ['docker', 'binary']
+        fail_msg: "Required variables (registration_token, domain) must be defined and gitea_runner_install_method must be 'docker' or 'binary'"
+
+    - name: Display configuration summary
+      ansible.builtin.debug:
+        msg:
+          - "Installation method: {{ gitea_runner_install_method }}"
+          - "Runner name: {{ gitea_runner_name | default('homelab-runner') }}"
+          - "Force registration: {{ gitea_runner_force_registration | default(false) }}"
+          - "Gitea instance: https://gitea.{{ domain }}"
+
+    - name: Validate Docker requirements
+      ansible.builtin.assert:
+        that:
+          - gitea_runner_dir is defined
+        fail_msg: "gitea_runner_dir is required for Docker installation"
+      when: gitea_runner_install_method == 'docker'
+
+    - name: Include Docker installation tasks
+      ansible.builtin.include_tasks: install_docker.yaml
+      when: gitea_runner_install_method == 'docker'
+
+    - name: Include binary installation tasks
+      ansible.builtin.include_tasks: install_binary.yaml
+      when: gitea_runner_install_method == 'binary'
+
+  tags: [gitea-runner, runner, actions]
+  when: gitea_runner_enabled | default(true)

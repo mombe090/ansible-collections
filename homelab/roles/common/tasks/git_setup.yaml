@@ -1,6 +1,6 @@
 - name: Ensure .ssh directory exists
   ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/.ssh"
+    path: "~/.ssh"
     state: directory
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
@@ -11,7 +11,7 @@
 - name: Generate SSH Keys for User
   ansible.builtin.openssh_keypair:
     state: present
-    path: "/home/{{ ansible_user }}/.ssh/id_ed25519"
+    path: "~/.ssh/id_ed25519"
     type: ed25519
     size: 4096
     comment: "{{ ansible_user }}@{{ ansible_hostname }}"
@@ -23,7 +23,7 @@
 - name: Generate Git Configuration
   ansible.builtin.template:
     src: gitconfig.j2
-    dest: "/home/{{ ansible_user }}/.gitconfig"
+    dest: "~/.gitconfig"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: "0644"
@@ -36,7 +36,7 @@
 
 - name: Clone Ansible Collections Repo
   ansible.builtin.git:
-    repo: https://{{ ansible_user }}:{{ github_token }}@github.com/{{ ansible_user }}/ansible-collections.git
+    repo: https://{{ ansible_user }}:{{ github_token }}@github.com/{{ lookup('env', 'HOMELAB_USER') }}/ansible-collections.git
     version: main
     dest: "~/ansible-collections"
     force: true
@@ -45,7 +45,7 @@
 
 - name: Clone Dotfiles Repo
   ansible.builtin.git:
-    repo: https://{{ ansible_user }}:{{ github_token }}@github.com/{{ ansible_user }}/dotfiles.git
+    repo: https://{{ ansible_user }}:{{ github_token }}@github.com/{{ lookup('env', 'HOMELAB_USER') }}/dotfiles.git
     version: main
     dest: "~/dotfiles"
     force: true

@@ -1,13 +1,23 @@
 - ansible.builtin.include_tasks: qeumu_ga.yaml
-  when: virtualization_type == "kvm"
+  when: virtualization_type == "kvm" and initialization == true | default(false)
+
+- name: Ensure .zshrc exists
+  ansible.builtin.file:
+    path: "~/.zshrc"
+    state: touch
+  become_user: "{{ ansible_user }}"
 
 - ansible.builtin.include_tasks: base_packages.yaml
+  when: initialization == true | default(false)
 
-- ansible.builtin.include_tasks: brew_packages.yaml
-  when: install_brew == true
+#- ansible.builtin.include_tasks: brew_packages.yaml
+#  when: install_brew == true and initialization == true
 
 - ansible.builtin.include_tasks: git_setup.yaml
+  when: initialization == true | default(false)
+
 - ansible.builtin.include_tasks: zsh_config.yaml
+  when: initialization == true | default(false)
 
 - name: Copy Role files
   ansible.builtin.copy:
@@ -15,6 +25,10 @@
     dest: /tmp
     mode: "0777"
   become: true
+  when: install_brew == true and ansible_user != "root" and initialization == true
+
+- ansible.builtin.include_tasks: brew_packages.yaml
+  when: install_brew == true and ansible_user != "root" and initialization == true
 
 - name: Install Homebrew Packages
   become: true
@@ -23,7 +37,7 @@
       chmod +x /tmp/brew-packages.sh
       /bin/bash /tmp/brew-packages.sh
   become_user: "{{ ansible_user }}"
-  when: install_brew == true
+  when: install_brew == true and ansible_user != "root" and initialization == true
 
 - name: Install go-task
   become: true

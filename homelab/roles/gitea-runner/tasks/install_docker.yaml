@@ -1,0 +1,147 @@
+---
+- name: Setup Gitea Actions runner with Docker
+  block:
+    - name: Create runner directory structure
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+        owner: "1000"
+        group: "1000"
+      loop:
+        - "{{ gitea_runner_dir }}"
+        - "{{ gitea_runner_dir }}/data"
+        - "{{ gitea_runner_dir }}/data/config"
+        - "{{ gitea_runner_dir }}/data/cache"
+
+    - name: Deploy runner compose configuration
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/compose.yaml.j2"
+        dest: "{{ gitea_runner_dir }}/compose.yaml"
+        mode: "0644"
+        owner: "1000"
+        group: "1000"
+      notify: restart gitea runner
+
+    - name: Deploy runner environment file
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/.env.j2"
+        dest: "{{ gitea_runner_dir }}/.env"
+        mode: "0600"
+        owner: "1000"
+        group: "1000"
+      notify: restart gitea runner
+      no_log: true
+
+    - name: Start runner service with docker-compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ gitea_runner_dir }}"
+        state: present
+        pull: "{{ gitea_force_pull | default('missing') }}"
+
+    - name: Check if runner is already registered
+      ansible.builtin.stat:
+        path: "{{ gitea_runner_dir }}/data/.runner"
+      register: runner_config
+
+    - name: Remove existing registration if force registration is enabled
+      ansible.builtin.file:
+        path: "{{ gitea_runner_dir }}/data/.runner"
+        state: absent
+      when:
+        - gitea_runner_force_registration | default(false)
+        - runner_config.stat.exists
+      notify: restart gitea runner
+
+    - name: Re-check registration status after force removal
+      ansible.builtin.stat:
+        path: "{{ gitea_runner_dir }}/data/.runner"
+      register: runner_config_final
+      when: gitea_runner_force_registration | default(false)
+
+    - name: Set final registration status
+      ansible.builtin.set_fact:
+        needs_registration: "{{ not (runner_config_final.stat.exists if gitea_runner_force_registration else runner_config.stat.exists) }}"
+
+    - name: Display registration status
+      ansible.builtin.debug:
+        msg: "Runner registration needed: {{ needs_registration }}"
+
+    - name: Wait for gitea-runner container to be running
+      ansible.builtin.shell: docker inspect gitea-runner --format='{{"{{"}}{{"{{"}} .State.Status {{"}}"}}{{"}}"}}'
+      register: container_status
+      until: container_status.stdout == "running"
+      retries: 30
+      delay: 5
+      when: needs_registration
+
+    - name: Stop runner daemon before registration
+      community.docker.docker_container_exec:
+        container: gitea-runner
+        command: pkill -f act_runner || true
+      when: needs_registration
+      ignore_errors: true
+
+    - name: Register runner with Gitea instance
+      community.docker.docker_container_exec:
+        container: gitea-runner
+        command: >
+          act_runner register
+          --no-interactive
+          --instance https://gitea.{{ domain }}
+          --token {{ registration_token }}
+          --name {{ gitea_runner_name | default('homelab-runner') }}
+          --labels {{ gitea_runner_labels | default('ubuntu-latest:docker://catthehacker/ubuntu:act-latest,self-hosted:host') }}
+          --config /data/.runner{% if gitea_runner_ephemeral | default(false) %}
+          --ephemeral{% endif %}
+      when: needs_registration
+      register: runner_registration
+
+    - name: Verify runner registration
+      ansible.builtin.stat:
+        path: "{{ gitea_runner_dir }}/data/.runner"
+      register: runner_registered
+      when: runner_registration.changed
+
+    - name: Display runner registration result
+      ansible.builtin.debug:
+        msg:
+          - "Runner registration: {{ runner_registration.stdout if runner_registration.changed else 'Already registered' }}"
+          - "Registration file exists: {{ runner_registered.stat.exists | default('N/A') }}"
+
+    - name: Restart runner service after registration
+      community.docker.docker_compose_v2:
+        project_src: "{{ gitea_runner_dir }}"
+        state: present
+        recreate: always
+      when: runner_registration.changed
+
+  rescue:
+    - name: Display runner setup error
+      ansible.builtin.debug:
+        msg: "Docker runner setup failed. Check Docker daemon, Gitea connectivity and registration token."
+
+    - name: Show runner logs for debugging
+      community.docker.docker_container_exec:
+        container: gitea-runner
+        command: sh -c "find /data -name '*.log' -type f -exec cat {} \; 2>/dev/null || echo 'No log files found'"
+      register: runner_logs
+      ignore_errors: true
+
+    - name: Display runner logs
+      ansible.builtin.debug:
+        msg: "{{ runner_logs.stdout if runner_logs.stdout != '' else 'No runner logs available' }}"
+      when: runner_logs is defined
+
+    - name: Show container logs as fallback
+      ansible.builtin.shell: docker logs gitea-runner --tail 50
+      register: container_logs
+      ignore_errors: true
+
+    - name: Display container logs
+      ansible.builtin.debug:
+        msg: "{{ container_logs.stdout_lines | default(['No container logs available']) }}"
+      when: container_logs is defined
+
+  become: true
+  tags: [gitea-runner, runner, actions, docker]

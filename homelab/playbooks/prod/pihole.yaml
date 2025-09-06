@@ -1,0 +1,36 @@
+---
+- name: Install DNS server with Pihole and Cloudflared
+  hosts:
+    - dns-prod
+  gather_facts: true
+  become: true
+  vars:
+    virtualization_type: kvm
+    initialization: false
+    domain: "{{ lookup('env', 'HOMELAB_DOMAIN_PROD') }}"
+    proxy_host: "proxy.{{ lookup('env', 'HOMELAB_DOMAIN_PROD') }}"
+
+  roles:
+    - name: pihole
+      vars:
+        project: '{{ lookup("env", "PROJECT_NAME") }}'
+        dns_hosts:
+          - 192.168.10.10 pve-prod1.{{ domain }}
+          - 192.168.10.11 pve-prod2.{{ domain }}
+          - 192.168.10.12 pve-prod3.{{ domain }}
+          - 192.168.10.80 {{ proxy_host }}
+          - 192.168.10.111 pihole.{{ domain }}
+          - 192.168.10.250 pihole-mac.{{ domain }}
+          - 192.168.10.30 pbs-host.{{ domain }}
+
+        cnameRecords:
+          - dns.{{ domain }},{{ proxy_host }}
+          - dns-mac.{{ domain }},{{ proxy_host }}
+          - homepage.{{ domain }},{{ proxy_host }}
+          - authentik.{{ domain }},{{ proxy_host }}
+          - pve1.{{ domain }},{{ proxy_host }}
+          - pve2.{{ domain }},{{ proxy_host }}
+          - pve3.{{ domain }},{{ proxy_host }}
+          - gitea.{{ domain }},{{ proxy_host }}
+          - pbs.{{ domain }},{{ proxy_host }}
+          - vaultwarden.{{ domain }},{{ proxy_host }}

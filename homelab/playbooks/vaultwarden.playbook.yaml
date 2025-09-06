@@ -1,0 +1,28 @@
+---
+- name: Deploy Vaultwarden password manager
+  hosts:  proxy.prod.home.mombesoft.com
+  become: true
+  vars:
+    # Domain configuration
+    domain: '{{ lookup("env", "HOMELAB_DOMAIN_PROD") }}'
+
+    # Vaultwarden configuration
+    vaultwarden_admin_token: "{{ lookup('env', 'VAULTWARDEN_ADMIN_TOKEN') }}"  # Store in ansible-vault
+    vaultwarden_signups_allowed: true
+    vaultwarden_invitations_allowed: true
+    vaultwarden_websocket_enabled: false
+
+    # Database configuration
+    postgres_host: "192.168.10.20"
+    username: "vaultwarden"
+    password: "{{ lookup('env', 'VAULTWARDEN_DB_PASSWORD') | default(lookup('env', 'HOMELAB_PASSWORD')) }}"
+
+
+    # Backup configuration
+    vaultwarden_backup_enabled: true
+    vaultwarden_backup_schedule: "0 3 * * *"  # Daily at 3 AM
+
+  roles:
+    - vaultwarden
+
+  tags: [vaultwarden]

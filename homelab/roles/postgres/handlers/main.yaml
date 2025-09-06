@@ -1,0 +1,31 @@
+- name: restart postgres
+  community.docker.docker_compose_v2:
+    project_src: "{{ postgres_dir }}"
+    state: present
+    recreate: always
+    wait: true
+    wait_timeout: 180
+  become: true
+
+- name: wait for postgres
+  ansible.builtin.wait_for:
+    port: "{{ postgres_port | default(5432) }}"
+    timeout: 60
+    delay: 5
+  become: true
+
+- name: verify postgres health
+  community.docker.docker_container_exec:
+    container: "{{ postgres_container_name | default('postgres') }}"
+    command: pg_isready -U {{ postgres_user | default('postgres') }}
+  retries: 5
+  delay: 5
+  until: result.rc == 0
+  register: result
+  become: true
+
+- name: Remove current env file
+  ansible.builtin.file:
+    path: "{{ postgres_dir }}/.env"
+    state: absent
+  become: true

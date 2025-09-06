@@ -1,0 +1,23 @@
+---
+# Handlers for NFS client role
+
+- name: restart nfs idmap client
+  ansible.builtin.service:
+    name: "{{ nfs_idmap_client_service | default('nfs-idmapd') }}"
+    state: restarted
+  become: true
+  listen: "restart nfs idmap client"
+  when: nfs_idmap_client_service is defined
+
+- name: restart rpcbind client
+  ansible.builtin.service:
+    name: rpcbind
+    state: restarted
+  become: true
+  listen: "restart rpcbind client"
+
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+  listen: "reload systemd"

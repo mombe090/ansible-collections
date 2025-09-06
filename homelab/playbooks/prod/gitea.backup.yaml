@@ -1,0 +1,16 @@
+---
+- name: Gitea Backup Management
+  hosts: proxy.prod.home.mombesoft.com
+  become: true
+  gather_facts: true
+  vars:
+    domain: '{{ lookup("env", "HOMELAB_DOMAIN_PROD") }}'
+    postgres_user: 'gitea'
+    postgres_password: '{{ lookup("env", "HOMELAB_PASSWORD") }}'
+
+  roles:
+    - role: gitea
+      vars:
+        gitea_backup_enabled: true
+        gitea_backup_mode: true # Add this to distinguish backup vs deploy
+      tags: [backup]

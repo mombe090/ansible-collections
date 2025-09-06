@@ -1,0 +1,60 @@
+---
+# Default variables for NFS client role
+
+# NFS client service configuration
+nfs_client_enabled: true
+
+# NFS mounts configuration
+# Example:
+# nfs_mounts:
+#   - server: "192.168.1.100"
+#     path: "/srv/nfs/shared"
+#     mount_point: "/mnt/nfs-shared"
+#     fstype: "nfs"
+#     options: "defaults,rsize=8192,wsize=8192,timeo=14,intr"
+#     state: "mounted"
+#     persistent: true
+#     owner: root
+#     group: root
+#     mode: "0755"
+#   - server: "192.168.1.100"
+#     path: "/srv/nfs/data"
+#     mount_point: "/mnt/nfs-data"
+#     fstype: "nfs4"
+#     options: "defaults,nfsvers=4,soft,timeo=30"
+#     state: "mounted"
+#     persistent: true
+#     owner: datauser
+#     group: datagroup
+#     mode: "0750"
+nfs_mounts: []
+
+# NFS client configuration
+nfs_client_domain: "{{ ansible_domain | default(ansible_fqdn.split('.')[1:] | join('.')) | default('localdomain') }}"
+nfs_client_timeout: 15
+nfs_client_retrans: 3
+
+# Default mount options (used when not specified)
+nfs_default_mount_options: "defaults,rsize=8192,wsize=8192,timeo=14,intr"
+
+# Service management
+nfs_manage_services: true
+nfs_client_services_enabled: true
+
+# Create mount point directories if they don't exist
+nfs_create_mount_dirs: true
+
+# Backup fstab before changes
+nfs_backup_fstab: true
+
+# NFS client packages (will be overridden by OS-specific vars)
+nfs_client_packages:
+  - nfs-common # Debian/Ubuntu default
+
+# NFS client services (will be overridden by OS-specific vars)
+nfs_client_services:
+  - rpcbind
+
+# Mount validation
+nfs_validate_mounts: true
+nfs_mount_check_timeout: 10

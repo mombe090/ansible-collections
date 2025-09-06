@@ -1,0 +1,6 @@
+pg_host: postgresql
+pg_db: authentik
+pg_user: authentik
+pg_pass: authentik
+authentik_secret_key: replace_with_your_secret_key
+authentik_dir: /opt/authentik

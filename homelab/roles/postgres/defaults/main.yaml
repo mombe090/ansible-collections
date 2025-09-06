@@ -1,0 +1,8 @@
+postgres_dir: /opt/postgres
+postgres_force_pull: never
+postgres_version: 17.5-bookworm
+postgres_container_name: postgres
+postgres_compose_service_name: db
+postgres_port: 5432
+postgres_user: postgres
+postgres_db: postgres

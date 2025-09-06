@@ -1,0 +1,222 @@
+---
+- name: Setup Gitea Actions runner with binary
+  block:
+    - name: Detect system architecture for binary download
+      ansible.builtin.set_fact:
+        gitea_runner_detected_arch: >-
+          {%- if ansible_architecture is defined -%}
+            {%- if ansible_architecture == 'x86_64' -%}
+              amd64
+            {%- elif ansible_architecture == 'aarch64' -%}
+              arm64
+            {%- elif ansible_architecture == 'armv7l' -%}
+              armv7
+            {%- else -%}
+              amd64
+            {%- endif -%}
+          {%- else -%}
+            amd64
+          {%- endif -%}
+
+    - name: Set binary download URL
+      ansible.builtin.set_fact:
+        gitea_runner_binary_url: "https://dl.gitea.com/act_runner/{{ gitea_runner_version }}/act_runner-{{ gitea_runner_version }}-linux-{{ gitea_runner_detected_arch }}"
+
+    - name: Create runner group
+      ansible.builtin.group:
+        name: "{{ gitea_runner_group }}"
+        system: true
+        state: present
+      become: "{{ gitea_runner_become | default(true) }}"
+
+    - name: Create runner user
+      ansible.builtin.user:
+        name: "{{ gitea_runner_user }}"
+        group: "{{ gitea_runner_group }}"
+        home: "{{ gitea_runner_home }}"
+        create_home: true
+        shell: /bin/bash
+        system: true
+        state: present
+      become: "{{ gitea_runner_become | default(true) }}"
+
+    - name: Add runner user to docker group (if docker is available for job execution)
+      ansible.builtin.user:
+        name: "{{ gitea_runner_user }}"
+        groups: docker
+        append: true
+      become: "{{ gitea_runner_become | default(true) }}"
+      when: gitea_runner_use_docker_for_jobs | default(true)
+      ignore_errors: true # In case docker group doesn't exist
+
+    - name: Create runner directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ gitea_runner_user }}"
+        group: "{{ gitea_runner_group }}"
+      loop:
+        - "{{ gitea_runner_home }}"
+        - "/etc/act_runner"
+        - "/var/log/act_runner"
+      become: "{{ gitea_runner_become | default(true) }}"
+
+    - name: Download act_runner binary
+      ansible.builtin.get_url:
+        url: "{{ gitea_runner_binary_url }}"
+        dest: "/usr/local/bin/act_runner"
+        mode: "0755"
+        owner: root
+        group: root
+        force: true
+        timeout: 60
+      register: binary_downloaded
+      retries: 3
+      delay: 10
+      become: "{{ gitea_runner_become | default(true) }}"
+
+    - name: Verify binary installation
+      ansible.builtin.command: "/usr/local/bin/act_runner --version"
+      register: version_check
+      changed_when: false
+
+    - name: Display binary version
+      ansible.builtin.debug:
+        msg: "act_runner version: {{ version_check.stdout }}"
+
+    - name: Create runner configuration from template
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/config.yaml.j2"
+        dest: "{{ gitea_runner_config_file }}"
+        owner: "{{ gitea_runner_user }}"
+        group: "{{ gitea_runner_group }}"
+        mode: "0600"
+      become: "{{ gitea_runner_become | default(true) }}"
+      notify: restart act_runner
+
+    - name: Create systemd environment file
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/act_runner.env.j2"
+        dest: /etc/act_runner/act_runner.env
+        owner: root
+        group: root
+        mode: "0600"
+      become: "{{ gitea_runner_become | default(true) }}"
+      notify: restart act_runner
+
+    - name: Create systemd service file
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/act_runner.service.j2"
+        dest: /etc/systemd/system/act_runner.service
+        owner: root
+        group: root
+        mode: "0644"
+      become: "{{ gitea_runner_become | default(true) }}"
+      notify:
+        - reload systemd
+        - restart act_runner
+
+    - name: Check if runner is already registered
+      ansible.builtin.stat:
+        path: "{{ gitea_runner_data_file }}"
+      register: runner_config
+
+    - name: Remove existing registration if force registration is enabled
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ gitea_runner_data_file }}"
+      when:
+        - gitea_runner_force_registration | default(false)
+        - runner_config.stat.exists
+      become: "{{ gitea_runner_become | default(true) }}"
+
+    - name: Re-check registration status after force removal
+      ansible.builtin.stat:
+        path: "{{ gitea_runner_data_file }}"
+      register: runner_config_final
+      when: gitea_runner_force_registration | default(false)
+
+    - name: Set final registration status
+      ansible.builtin.set_fact:
+        needs_registration: "{{ not (runner_config_final.stat.exists if gitea_runner_force_registration else runner_config.stat.exists) }}"
+
+    - name: Display registration status
+      ansible.builtin.debug:
+        msg: "Runner registration needed: {{ needs_registration }}"
+
+    - name: Recreate config file after force removal (if needed)
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/config.yaml.j2"
+        dest: "{{ gitea_runner_config_file }}"
+        owner: "{{ gitea_runner_user }}"
+        group: "{{ gitea_runner_group }}"
+        mode: "0600"
+      become: "{{ gitea_runner_become | default(true) }}"
+      when: gitea_runner_force_registration | default(false)
+
+    - name: Verify connectivity to Gitea instance
+      ansible.builtin.uri:
+        url: "https://gitea.{{ domain }}/api/v1/version"
+        method: GET
+        timeout: 10
+      register: gitea_connectivity
+      when:
+        - needs_registration
+        - not ansible_check_mode
+      failed_when: false
+
+    - name: Display connectivity status
+      ansible.builtin.debug:
+        msg: "Gitea connectivity: {{ gitea_connectivity.status | default('skipped in check mode') }}"
+      when: needs_registration
+
+    - name: Fail if Gitea is unreachable
+      ansible.builtin.fail:
+        msg: "Cannot reach Gitea instance at https://gitea.{{ domain }}"
+      when:
+        - needs_registration
+        - not ansible_check_mode
+        - gitea_connectivity.status is not defined or gitea_connectivity.status != 200
+
+    - name: Register runner with Gitea instance
+      ansible.builtin.shell: |
+        cd {{ gitea_runner_home }}
+        export HOME={{ gitea_runner_home }}
+        chown -R {{ gitea_runner_user }}:{{ gitea_runner_group }} {{ gitea_runner_home }}
+        timeout 60 runuser -l {{ gitea_runner_user }} -c "/usr/local/bin/act_runner register \
+          --config {{ gitea_runner_config_file }} \
+          --no-interactive \
+          --instance https://gitea.{{ domain }} \
+          --token {{ registration_token }} \
+          --name {{ gitea_runner_name | default('homelab-runner') }} \
+          --labels '{{ gitea_runner_labels | default('self-hosted:host,linux:host') }}'{% if gitea_runner_ephemeral | default(false) %} \
+          --ephemeral{% endif %}"
+      when: needs_registration
+      register: runner_registration
+      become: "{{ gitea_runner_become | default(true) }}"
+
+    - name: Display registration output
+      ansible.builtin.debug:
+        var: runner_registration
+      when:
+        - needs_registration
+        - runner_registration is defined
+
+    - name: Enable and start act_runner service
+      ansible.builtin.systemd:
+        name: act_runner
+        enabled: true
+        state: started
+        daemon_reload: true
+      become: "{{ gitea_runner_become | default(true) }}"
+      when: >
+        (not needs_registration) or
+        (needs_registration and runner_registration is defined and runner_registration.rc == 0)
+
+  rescue:
+    - name: Display error information
+      ansible.builtin.debug:
+        msg: "Binary installation failed. Check logs and ensure all prerequisites are met."

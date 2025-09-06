@@ -1,0 +1,61 @@
+---
+# PhotoPrism configuration defaults
+photoprism_dir: /opt/photoprism
+photoprism_version: "latest"
+photoprism_port: 2342
+
+# Storage paths - customize these for your setup
+photoprism_originals_path: /mnt/photos
+photoprism_storage_path: "{{ photoprism_dir }}/storage"
+photoprism_import_path: "{{ photoprism_dir }}/import"
+
+# Database configuration
+photoprism_db_driver: mysql
+photoprism_db_host: mariadb
+photoprism_db_port: 3306
+photoprism_db_name: photoprism
+photoprism_db_user: photoprism
+photoprism_mariadb_version: "11.4"
+
+# Admin user configuration
+photoprism_admin_user: admin
+
+# Performance settings
+photoprism_workers: 1
+photoprism_readonly: false
+
+# Feature flags - AI features disabled by default (no hardware support)
+photoprism_disable_faces: true
+photoprism_disable_classification: true
+photoprism_disable_tensorflow: true
+photoprism_disable_tga: false
+photoprism_disable_backups: false
+photoprism_disable_webdav: false
+photoprism_disable_settings: false
+photoprism_disable_places: false
+photoprism_disable_exiftool: false
+photoprism_disable_ffmpeg: false
+photoprism_disable_darktable: false
+photoprism_disable_rawtherapee: false
+photoprism_disable_sips: false
+photoprism_disable_heifconvert: false
+
+# Upload and library settings
+photoprism_upload_nsfw: true
+photoprism_detect_nsfw: false
+photoprism_experimental: false
+photoprism_site_url: "https://photos.{{ lookup('env', 'HOMELAB_DOMAIN') }}"
+photoprism_site_title: "PhotoPrism"
+photoprism_site_caption: "AI-Powered Photos App"
+photoprism_site_description: "Browse Your Life in Pictures"
+photoprism_site_author: "{{ lookup('env', 'HOMELAB_USER_FULLNAME') }}"
+
+# Logging
+photoprism_log_level: info
+photoprism_debug: false
+
+# Enable role
+photoprism_enabled: true
+
+# Traefik labels (will be populated by calling playbook)
+photoprism_labels: []

@@ -12,15 +12,9 @@
   become_user: "{{ ansible_user }}"
   when: not brew_installed.stat.exists
 
-- name: Ensure .zshrc exists
-  ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/.zshrc"
-    state: touch
-  become_user: "{{ ansible_user }}"
-
 - name: Add Homebrew to PATH for zsh user
   ansible.builtin.lineinfile:
-    path: "/home/{{ ansible_user }}/.zshrc"
+    path: "~/.zshrc"
     line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
     state: present
   become_user: "{{ ansible_user }}"

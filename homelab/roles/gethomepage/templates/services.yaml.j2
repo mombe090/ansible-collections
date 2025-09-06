@@ -3,14 +3,115 @@
 # https://gethomepage.dev/latest/configs/services
 # icons found here https://github.com/walkxcode/dashboard-icons
 
-- HOME-LAPTOP:
-    - PVE:
+- proxmox-prod:
+    - PVE1:
         icon: proxmox.svg
-        href: "any"
-        description: pve1
+        href: "https://pve1.{{ domain }}"
+        description: "Proxmox Virtual Environment (PVE) production cluster"
         widget:
             type: proxmox
-            url: "any"
-            username:  "any"
-            password:  "any"
-            node: pve
+            url: "https://pve1.{{ domain }}"
+            username:  "{{ proxmox_token }}"
+            password:  "{{ proxmox_secret }}"
+            node: pve-prod1
+    - PVE2:
+        icon: proxmox.svg
+        href: "https://pve2.{{ domain }}"
+        description: "Proxmox Virtual Environment (PVE) production cluster"
+        widget:
+            type: proxmox
+            url: "https://pve2.{{ domain }}"
+            username:  "{{ proxmox_token }}"
+            password:  "{{ proxmox_secret }}"
+            node: pve-prod2
+    - PVE3:
+        icon: proxmox.svg
+        href: "https://pve3.{{ domain }}"
+        description: "Proxmox Virtual Environment (PVE) production cluster"
+        widget:
+            type: proxmox
+            url: "https://pve3.{{ domain }}"
+            username:  "{{ proxmox_token }}"
+            password:  "{{ proxmox_secret }}"
+            node: pve-prod3
+    - PBS:
+        icon: proxmox.svg
+        href: "https://pbs.{{ domain }}"
+        description: "Proxmox Backup Server (PBS) "
+        widget:
+            type: proxmoxbackupserver
+            url: "https://pbs.{{ domain }}"
+            username:  "{{ lookup('env', 'PROXMOX_PBS_HOMEPAGE_USERNAME') }}"
+            password:  "{{ lookup('env', 'PROXMOX_PBS_HOMEPAGE_PASSWORD') }}"
+
+- proxmox-dev:
+    - PVE1:
+        icon: proxmox.svg
+        href: "https://pve1.dev.{{ domain }}"
+        description: "Proxmox Virtual Environment (PVE) development cluster"
+        widget:
+            type: proxmox
+            url: "https://pve1.dev.{{ domain }}"
+            username:  "{{ proxmox_token }}"
+            password:  "{{ proxmox_secret }}"
+            node: pve1
+    - PVE2:
+        icon: proxmox.svg
+        href: "https://pve2.dev.{{ domain }}"
+        description: "Proxmox Virtual Environment (PVE) development cluster"
+        widget:
+            type: proxmox
+            url: "https://pve2.dev.{{ domain }}"
+            username:  "{{ proxmox_token }}"
+            password:  "{{ proxmox_secret }}"
+            node: pve2
+
+- dns:
+    - prod:
+        icon: pi-hole.svg
+        href: "https://dns.{{ domain }}/admin"
+        description: "Pi-hole DNS server for production"
+        widget:
+          type: pihole
+          url: http://pihole.{{ domain }}:80
+          version: 6
+          key: "{{ lookup('env', 'PI_HOLE_ADMIN_PASSWORD') }}"
+    - dev:
+        icon: pi-hole.svg
+        href: "https://dns.{{ domain }}/admin"
+        description: "Pi-hole DNS server for development"
+        widget:
+          type: pihole
+          url: http://pihole.{{ domain }}:80
+          version: 6
+          key: "{{ lookup('env', 'PI_HOLE_ADMIN_PASSWORD') }}"
+    - mac:
+        icon: pi-hole.svg
+        href: "https://dns-mac.{{ domain }}/admin"
+        description: "Pi-hole DNS server running on MacBook Through multipass"
+        widget:
+          type: pihole
+          url: http://pihole-mac.{{ domain }}:80
+          version: 6
+          key: "{{ lookup('env', 'PI_HOLE_ADMIN_PASSWORD') }}"
+
+
+- devtools:
+    - Gitea:
+        icon: gitea.svg
+        href: "https://gitea.{{ domain }}"
+        description: "Gitea self-hosted Git service"
+        widget:
+            type: gitea
+            url: "https://gitea.{{ domain }}"
+            key: "{{ lookup('env', 'GITEA_ADMIN_TOKEN') }}"
+
+- security:
+    - Authentik:
+        icon: authentik.svg
+        href: "https://authentik.{{ domain }}"
+        description: "Authentik self-hosted identity provider"
+        widget:
+            type: authentik
+            url: "https://authentik.{{ domain }}"
+            key: "{{ lookup('env', 'AUTHENTIK_ADMIN_TOKEN') }}"

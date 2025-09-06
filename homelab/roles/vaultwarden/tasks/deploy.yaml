@@ -1,0 +1,63 @@
+---
+- name: Vaultwarden deployment with Docker Compose
+  block:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - postgres_host is defined
+          - postgres_port is defined
+          - username is defined
+          - password is defined
+          - vaultwarden_dir is defined
+          - vaultwarden_admin_token is defined
+          - vaultwarden_admin_token | length > 0
+        fail_msg: "Required variables (postgres_host, postgres_port, username, password, vaultwarden_dir, vaultwarden_admin_token) must be defined"
+
+    - name: Create secure vaultwarden directory structure
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+        owner: "999"
+        group: "999"
+      loop:
+        - "{{ vaultwarden_dir }}"
+        - "{{ vaultwarden_dir }}/data"
+        - "{{ vaultwarden_backup_dir }}"
+
+    - name: Deploy compose configuration
+      ansible.builtin.template:
+        src: compose.yaml.j2
+        dest: "{{ vaultwarden_dir }}/compose.yaml"
+        backup: true
+        mode: "0640"
+      notify:
+        - restart vaultwarden
+
+    - name: Deploy environment file
+      ansible.builtin.template:
+        src: .env.j2
+        dest: "{{ vaultwarden_dir }}/.env"
+        mode: "0600"
+      notify:
+        - restart vaultwarden
+      no_log: true
+
+    - name: Validate compose file syntax
+      ansible.builtin.shell:
+        cmd: "docker compose -f {{ vaultwarden_dir }}/compose.yaml config"
+        chdir: "{{ vaultwarden_dir }}"
+      register: compose_validation
+      changed_when: false
+      failed_when: compose_validation.rc != 0
+
+    - name: Initial deployment (if no changes)
+      community.docker.docker_compose_v2:
+        project_src: "{{ vaultwarden_dir }}"
+        state: present
+        recreate: never
+      when: not (ansible_handlers_notified | default([]) | intersect(['restart vaultwarden']))
+
+  become: true
+  tags: [vaultwarden]
+  when: vaultwarden_enabled | default(true)

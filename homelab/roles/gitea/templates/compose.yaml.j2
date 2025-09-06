@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  gitea:
+    image: gitea/gitea:${GITEA_VERSION:-1.24.5}
+    container_name: gitea
+    restart: unless-stopped
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}
+      - GITEA__database__NAME=${POSTGRES_DB:-gitea}
+      - GITEA__database__USER=${POSTGRES_USER:-gitea}
+      - GITEA__database__PASSWD=${POSTGRES_PASSWORD}
+      - GITEA__server__SSH_PORT=${GITEA_SSH_PORT}
+      - GITEA__server__ROOT_URL=${GITEA_ROOT_URL}
+      - GITEA__server__SSH_DOMAIN=${GITEA_DOMAIN}
+      - GITEA__server__DISABLE_SSH=false
+      - GITEA__server__LANDING_PAGE=login
+      - GITEA__ui__DEFAULT_THEME=catppuccin-frappe-sky
+      - GITEA__ui__THEMES="catppuccin-macchiato-sky,catppuccin-frappe-sky,catppuccin-latte-sky,catppuccin-mocha-sky,catppuccin-teal-auto,catppuccin-frappe-blue,catppuccin-latte-blue,catppuccin-macchiato-blue,catppuccin-mocha-blue,catppuccin-frappe-sky,catppuccin-latte-sky,catppuccin-mocha-sky"
+      - GITEA__actions__ENABLED=true
+      - GITEA__actions__DEFAULT_ACTIONS_URL=https://gitea.{{ domain }}
+      - GITEA__log__LEVEL=Info
+      - GITEA__openid__ENABLE_OPENID_SIGNIN=false
+    networks:
+      - proxy
+    volumes:
+      - {{ gitea_dir }}/data:/data
+      - {{ gitea_dir }}/custom/css:/data/gitea/public/assets/css/
+      - ${GITEA_BACKUP_DIR}:/data/backups
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - "${GITEA_HTTP_PORT}:3000"
+      - "${GITEA_SSH_PORT}:22"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      {% for label in gitea_labels %}
+      - "{{ label }}"
+      {% endfor %}
+
+networks:
+  proxy:
+    external: true

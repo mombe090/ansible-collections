@@ -1,0 +1,20 @@
+---
+- name: restart gitea runner
+  community.docker.docker_compose_v2:
+    project_src: "{{ gitea_runner_dir }}"
+    state: present
+    recreate: always
+  become: "{{ gitea_runner_become }}"
+  when: gitea_runner_install_method == 'docker'
+
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: "{{ gitea_runner_become }}"
+
+- name: restart act_runner
+  ansible.builtin.systemd:
+    name: act_runner
+    state: restarted
+  become: "{{ gitea_runner_become }}"
+  when: gitea_runner_install_method == 'binary' and not ansible_check_mode
